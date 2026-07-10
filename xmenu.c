@@ -1,26 +1,44 @@
 #define TB_IMPL
 #include "termbox2.h"
 
-int main(void) {
-  struct tb_event ev;
-  int y = 0;
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
-  tb_init();
+#define MAX_BUF 30
 
-  tb_printf(0, y++, TB_GREEN, 0, "hello from termbox");
-  tb_printf(0, y++, 0, 0, "width=%d height=%d", tb_width(), tb_height());
-  tb_printf(0, y++, 0, 0, "press any key...");
-  tb_present();
+int main() {
+  if (tb_init() != 0) return EXIT_FAILURE;
 
-  tb_poll_event(&ev);
+  char buf[MAX_BUF + 1] = {0};
+  int len = 0;
 
-  y++;
-  tb_printf(0, y++, 0, 0, "event type=%d key=%d ch=%c", ev.type, ev.key, ev.ch);
-  tb_printf(0, y++, 0, 0, "press any key to quit...");
-  tb_present();
+  while (1) {
+    tb_clear();
+    for (int i = 0; i < len; i++)
+      tb_set_cell(i, 0, buf[i], TB_WHITE, TB_DEFAULT);
+    tb_set_cursor(len, 0);
+    tb_present();
 
-  tb_poll_event(&ev);
+    struct tb_event ev;
+    tb_poll_event(&ev);
+
+    if (ev.type == TB_EVENT_KEY) {
+      if (ev.key == TB_KEY_ESC || ev.key == TB_KEY_ENTER) {
+        printf("print: %s", buf);
+        break;
+      }
+      if (ev.key == TB_KEY_BACKSPACE || ev.key == TB_KEY_BACKSPACE2 ||
+          ev.key == TB_KEY_CTRL_H)
+      {
+        if (len > 0) buf[--len] = '\0';
+      } else if (ev.ch != 0 && len < MAX_BUF) {
+        buf[len++] = (char)ev.ch;
+        buf[len] = '\0';
+      }
+    }
+  }
+
   tb_shutdown();
-
-  return 0;
+  return EXIT_SUCCESS;
 }
