@@ -15,8 +15,11 @@ int main() {
 
   while (1) {
     tb_clear();
+    // NOTE: this loop set colors before user starts typing
+    // for (int i = 0; i < MAX_BUF; i++)
+    //   tb_set_cell(i, 0, ' ', TB_BLUE, TB_DEFAULT);
     for (int i = 0; i < len; i++)
-      tb_set_cell(i, 0, buf[i], TB_WHITE, TB_DEFAULT);
+      tb_set_cell(i, 0, buf[i], TB_BLUE | TB_BOLD, TB_DEFAULT);
     tb_set_cursor(len, 0);
     tb_present();
 

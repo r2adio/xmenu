@@ -426,13 +426,13 @@ typedef uint16_t uintattr_t;
  * See `tb_present` for implementation.
  */
 struct tb_cell {
-    uint32_t ch;   // a Unicode codepoint
-    uintattr_t fg; // bitwise foreground attributes
-    uintattr_t bg; // bitwise background attributes
+  uint32_t ch;   // a Unicode codepoint
+  uintattr_t fg; // bitwise foreground attributes
+  uintattr_t bg; // bitwise background attributes
 #ifdef TB_OPT_EGC
-    uint32_t *ech; // a grapheme cluster of Unicode codepoints, 0-terminated
-    size_t nech;   // num elements in ech, 0 means use ch instead of ech
-    size_t cech;   // num elements allocated for ech
+  uint32_t *ech; // a grapheme cluster of Unicode codepoints, 0-terminated
+  size_t nech;   // num elements in ech, 0 means use ch instead of ech
+  size_t cech;   // num elements allocated for ech
 #endif
 };
 
@@ -450,14 +450,14 @@ struct tb_cell {
  *  when `TB_EVENT_MOUSE`: `key` (`TB_KEY_MOUSE_*`), `x`, and `y`
  */
 struct tb_event {
-    uint8_t type; // one of `TB_EVENT_*` constants
-    uint8_t mod;  // bitwise `TB_MOD_*` constants
-    uint16_t key; // one of `TB_KEY_*` constants
-    uint32_t ch;  // a Unicode codepoint
-    int32_t w;    // resize width
-    int32_t h;    // resize height
-    int32_t x;    // mouse x
-    int32_t y;    // mouse y
+  uint8_t type; // one of `TB_EVENT_*` constants
+  uint8_t mod;  // bitwise `TB_MOD_*` constants
+  uint16_t key; // one of `TB_KEY_*` constants
+  uint32_t ch;  // a Unicode codepoint
+  int32_t w;    // resize width
+  int32_t h;    // resize height
+  int32_t x;    // mouse x
+  int32_t y;    // mouse y
 };
 
 /* Initialize the termbox library. This function should be called before any
@@ -767,85 +767,85 @@ int tb_wcwidth(uint32_t ch);
 
 #ifdef TB_IMPL
 
-#define if_err_return(rv, expr)                                               \
-    if (((rv) = (expr)) != TB_OK) return (rv)
-#define if_err_break(rv, expr)                                                \
-    if (((rv) = (expr)) != TB_OK) break
-#define if_ok_return(rv, expr)                                                \
-    if (((rv) = (expr)) == TB_OK) return (rv)
-#define if_ok_or_need_more_return(rv, expr)                                   \
-    if (((rv) = (expr)) == TB_OK || (rv) == TB_ERR_NEED_MORE) return (rv)
+#define if_err_return(rv, expr)                                                \
+  if (((rv) = (expr)) != TB_OK) return (rv)
+#define if_err_break(rv, expr)                                                 \
+  if (((rv) = (expr)) != TB_OK) break
+#define if_ok_return(rv, expr)                                                 \
+  if (((rv) = (expr)) == TB_OK) return (rv)
+#define if_ok_or_need_more_return(rv, expr)                                    \
+  if (((rv) = (expr)) == TB_OK || (rv) == TB_ERR_NEED_MORE) return (rv)
 
-#define send_literal(rv, a)                                                   \
-    if_err_return((rv), bytebuf_nputs(&global.out, (a), sizeof(a) - 1))
+#define send_literal(rv, a)                                                    \
+  if_err_return((rv), bytebuf_nputs(&global.out, (a), sizeof(a) - 1))
 
-#define send_num(rv, nbuf, n)                                                 \
-    if_err_return((rv),                                                       \
-        bytebuf_nputs(&global.out, (nbuf), convert_num((n), (nbuf))))
+#define send_num(rv, nbuf, n)                                                  \
+  if_err_return((rv),                                                          \
+      bytebuf_nputs(&global.out, (nbuf), convert_num((n), (nbuf))))
 
-#define snprintf_or_return(rv, str, sz, fmt, ...)                             \
-    do {                                                                      \
-        (rv) = snprintf((str), (sz), (fmt), __VA_ARGS__);                     \
-        if ((rv) < 0 || (rv) >= (int)(sz)) return TB_ERR;                     \
-    } while (0)
+#define snprintf_or_return(rv, str, sz, fmt, ...)                              \
+  do {                                                                         \
+    (rv) = snprintf((str), (sz), (fmt), __VA_ARGS__);                          \
+    if ((rv) < 0 || (rv) >= (int)(sz)) return TB_ERR;                          \
+  } while (0)
 
-#define if_not_init_return()                                                  \
-    if (!global.initialized) return TB_ERR_NOT_INIT
+#define if_not_init_return()                                                   \
+  if (!global.initialized) return TB_ERR_NOT_INIT
 
 struct bytebuf {
-    char *buf;
-    size_t len;
-    size_t cap;
+  char *buf;
+  size_t len;
+  size_t cap;
 };
 
 struct cellbuf {
-    int width;
-    int height;
-    struct tb_cell *cells;
+  int width;
+  int height;
+  struct tb_cell *cells;
 };
 
 struct cap_trie {
-    char c;
-    struct cap_trie *children;
-    size_t nchildren;
-    int is_leaf;
-    uint16_t key;
-    uint8_t mod;
+  char c;
+  struct cap_trie *children;
+  size_t nchildren;
+  int is_leaf;
+  uint16_t key;
+  uint8_t mod;
 };
 
 struct tb_global {
-    int ttyfd;
-    int rfd;
-    int wfd;
-    int ttyfd_open;
-    int resize_pipefd[2];
-    int width;
-    int height;
-    int cursor_x;
-    int cursor_y;
-    int last_x;
-    int last_y;
-    uintattr_t fg;
-    uintattr_t bg;
-    uintattr_t last_fg;
-    uintattr_t last_bg;
-    int input_mode;
-    int output_mode;
-    char *terminfo;
-    size_t nterminfo;
-    const char *caps[TB_CAP__COUNT];
-    struct cap_trie cap_trie;
-    struct bytebuf in;
-    struct bytebuf out;
-    struct cellbuf back;
-    struct cellbuf front;
-    struct termios orig_tios;
-    int has_orig_tios;
-    int last_errno;
-    int initialized;
-    int (*fn_extract_esc_pre)(struct tb_event *, size_t *);
-    int (*fn_extract_esc_post)(struct tb_event *, size_t *);
-    char errbuf[1024];
+  int ttyfd;
+  int rfd;
+  int wfd;
+  int ttyfd_open;
+  int resize_pipefd[2];
+  int width;
+  int height;
+  int cursor_x;
+  int cursor_y;
+  int last_x;
+  int last_y;
+  uintattr_t fg;
+  uintattr_t bg;
+  uintattr_t last_fg;
+  uintattr_t last_bg;
+  int input_mode;
+  int output_mode;
+  char *terminfo;
+  size_t nterminfo;
+  const char *caps[TB_CAP__COUNT];
+  struct cap_trie cap_trie;
+  struct bytebuf in;
+  struct bytebuf out;
+  struct cellbuf back;
+  struct cellbuf front;
+  struct termios orig_tios;
+  int has_orig_tios;
+  int last_errno;
+  int initialized;
+  int (*fn_extract_esc_pre)(struct tb_event *, size_t *);
+  int (*fn_extract_esc_post)(struct tb_event *, size_t *);
+  char errbuf[1024];
 };
 
 static struct tb_global global = {0};
@@ -1147,9 +1147,9 @@ static const char *eterm_caps[] = {
 };
 
 static struct {
-    const char *name;
-    const char **caps;
-    const char *alias;
+  const char *name;
+  const char **caps;
+  const char *alias;
 } builtin_terms[] = {
     {"xterm",         xterm_caps,         ""    },
     {"linux",         linux_caps,         ""    },
@@ -1163,9 +1163,9 @@ static struct {
 /* END codegen c */
 
 static struct {
-    const char *cap;
-    const uint16_t key;
-    const uint8_t mod;
+  const char *cap;
+  const uint16_t key;
+  const uint8_t mod;
 } builtin_mod_caps[] = {
     // xterm arrows
     {"\x1b[1;2A",    TB_KEY_ARROW_UP,    TB_MOD_SHIFT                           },
@@ -1550,9 +1550,9 @@ static const unsigned char utf8_mask[6] = {0x7f, 0x1f, 0x0f, 0x07, 0x03, 0x01};
 
 #ifndef TB_OPT_LIBC_WCHAR
 static struct {
-    uint32_t range_start;
-    uint32_t range_end;
-    int width; // -1 means iswprint==0, otherwise wcwidth value (0, 1, or 2)
+  uint32_t range_start;
+  uint32_t range_end;
+  int width; // -1 means iswprint==0, otherwise wcwidth value (0, 1, or 2)
 } wcwidth_table[] = {
     // clang-format off
     {0x000001, 0x00001f, -1}, {0x000020, 0x00007e,  1}, {0x00007f, 0x00009f, -1},
@@ -2337,784 +2337,766 @@ static int tb_iswprint_ex(uint32_t ch, int *width);
 static int tb_cluster_width(uint32_t *ch, size_t nch);
 
 int tb_init(void) {
-    return tb_init_file("/dev/tty");
+  return tb_init_file("/dev/tty");
 }
 
 int tb_init_file(const char *path) {
-    if (global.initialized) return TB_ERR_INIT_ALREADY;
-    int ttyfd = open(path, O_RDWR);
-    if (ttyfd < 0) {
-        global.last_errno = errno;
-        return TB_ERR_INIT_OPEN;
-    }
-    global.ttyfd_open = 1;
-    return tb_init_fd(ttyfd);
+  if (global.initialized) return TB_ERR_INIT_ALREADY;
+  int ttyfd = open(path, O_RDWR);
+  if (ttyfd < 0) {
+    global.last_errno = errno;
+    return TB_ERR_INIT_OPEN;
+  }
+  global.ttyfd_open = 1;
+  return tb_init_fd(ttyfd);
 }
 
 int tb_init_fd(int ttyfd) {
-    return tb_init_rwfd(ttyfd, ttyfd);
+  return tb_init_rwfd(ttyfd, ttyfd);
 }
 
 int tb_init_rwfd(int rfd, int wfd) {
-    int rv;
+  int rv;
 
-    tb_reset();
-    global.ttyfd = isatty(rfd) ? rfd : (isatty(wfd) ? wfd : -1);
-    global.rfd = rfd;
-    global.wfd = wfd;
+  tb_reset();
+  global.ttyfd = isatty(rfd) ? rfd : (isatty(wfd) ? wfd : -1);
+  global.rfd = rfd;
+  global.wfd = wfd;
 
-    do {
-        if_err_break(rv, init_term_attrs());
-        if_err_break(rv, init_term_caps());
-        if_err_break(rv, init_cap_trie());
-        if_err_break(rv, init_resize_handler());
-        if_err_break(rv, send_init_escape_codes());
-        if_err_break(rv, send_clear());
-        if_err_break(rv, update_term_size());
-        if_err_break(rv, init_cellbuf());
-        global.initialized = 1;
-    } while (0);
+  do {
+    if_err_break(rv, init_term_attrs());
+    if_err_break(rv, init_term_caps());
+    if_err_break(rv, init_cap_trie());
+    if_err_break(rv, init_resize_handler());
+    if_err_break(rv, send_init_escape_codes());
+    if_err_break(rv, send_clear());
+    if_err_break(rv, update_term_size());
+    if_err_break(rv, init_cellbuf());
+    global.initialized = 1;
+  } while (0);
 
-    if (rv != TB_OK) tb_deinit();
+  if (rv != TB_OK) tb_deinit();
 
-    return rv;
+  return rv;
 }
 
 int tb_shutdown(void) {
-    if_not_init_return();
-    tb_deinit();
-    return TB_OK;
+  if_not_init_return();
+  tb_deinit();
+  return TB_OK;
 }
 
 int tb_width(void) {
-    if_not_init_return();
-    return global.width;
+  if_not_init_return();
+  return global.width;
 }
 
 int tb_height(void) {
-    if_not_init_return();
-    return global.height;
+  if_not_init_return();
+  return global.height;
 }
 
 int tb_clear(void) {
-    if_not_init_return();
-    return cellbuf_clear(&global.back);
+  if_not_init_return();
+  return cellbuf_clear(&global.back);
 }
 
 int tb_set_clear_attrs(uintattr_t fg, uintattr_t bg) {
-    if_not_init_return();
-    global.fg = fg;
-    global.bg = bg;
-    return TB_OK;
+  if_not_init_return();
+  global.fg = fg;
+  global.bg = bg;
+  return TB_OK;
 }
 
 int tb_present(void) {
-    if_not_init_return();
+  if_not_init_return();
 
-    int rv;
+  int rv;
 
-    // TODO: Assert global.back.(width,height) == global.front.(width,height)
+  // TODO: Assert global.back.(width,height) == global.front.(width,height)
 
-    global.last_x = -1;
-    global.last_y = -1;
+  global.last_x = -1;
+  global.last_y = -1;
 
-    int x, y, i;
-    for (y = 0; y < global.front.height; y++) {
-        for (x = 0; x < global.front.width;) {
-            struct tb_cell *back, *front;
-            if_err_return(rv, cellbuf_get(&global.back, x, y, &back));
-            if_err_return(rv, cellbuf_get(&global.front, x, y, &front));
+  int x, y, i;
+  for (y = 0; y < global.front.height; y++) {
+    for (x = 0; x < global.front.width;) {
+      struct tb_cell *back, *front;
+      if_err_return(rv, cellbuf_get(&global.back, x, y, &back));
+      if_err_return(rv, cellbuf_get(&global.front, x, y, &front));
 
-            int w;
-            {
+      int w;
+      {
 #ifdef TB_OPT_EGC
-                if (back->nech > 0)
-                    w = tb_cluster_width(back->ech, back->nech);
-                else
+        if (back->nech > 0)
+          w = tb_cluster_width(back->ech, back->nech);
+        else
 #endif
-                    w = tb_wcwidth((wchar_t)back->ch);
-            }
-            if (w < 1) w = 1; // wcwidth returns -1 for invalid codepoints
+          w = tb_wcwidth((wchar_t)back->ch);
+      }
+      if (w < 1) w = 1; // wcwidth returns -1 for invalid codepoints
 
-            if (cell_cmp(back, front) != 0) {
-                cell_copy(front, back);
+      if (cell_cmp(back, front) != 0) {
+        cell_copy(front, back);
 
-                send_attr(back->fg, back->bg);
-                if (w > 1 && x >= global.front.width - (w - 1)) {
-                    // Not enough room for wide char, send spaces
-                    for (i = x; i < global.front.width; i++) {
-                        send_char(i, y, ' ');
-                    }
-                } else {
-                    {
+        send_attr(back->fg, back->bg);
+        if (w > 1 && x >= global.front.width - (w - 1)) {
+          // Not enough room for wide char, send spaces
+          for (i = x; i < global.front.width; i++) { send_char(i, y, ' '); }
+        } else {
+          {
 #ifdef TB_OPT_EGC
-                        if (back->nech > 0)
-                            send_cluster(x, y, back->ech, back->nech);
-                        else
+            if (back->nech > 0)
+              send_cluster(x, y, back->ech, back->nech);
+            else
 #endif
-                            send_char(x, y, back->ch);
-                    }
+              send_char(x, y, back->ch);
+          }
 
-                    // When wcwidth>1, we need to advance the cursor by more
-                    // than 1, thereby skipping some cells. Set these skipped
-                    // cells to an invalid codepoint in the front buffer, so
-                    // that if this cell is later replaced by a wcwidth==1
-                    // char, we'll get a cell_cmp diff for the skipped cells
-                    // and properly re-render.
-                    for (i = 1; i < w; i++) {
-                        struct tb_cell *front_wide;
-                        uint32_t invalid = -1;
-                        if_err_return(rv,
-                            cellbuf_get(&global.front, x + i, y, &front_wide));
-                        if_err_return(rv,
-                            cell_set(front_wide, &invalid, 1, -1, -1));
-                    }
-                }
-            }
-            x += w;
+          // When wcwidth>1, we need to advance the cursor by more
+          // than 1, thereby skipping some cells. Set these skipped
+          // cells to an invalid codepoint in the front buffer, so
+          // that if this cell is later replaced by a wcwidth==1
+          // char, we'll get a cell_cmp diff for the skipped cells
+          // and properly re-render.
+          for (i = 1; i < w; i++) {
+            struct tb_cell *front_wide;
+            uint32_t invalid = -1;
+            if_err_return(rv,
+                cellbuf_get(&global.front, x + i, y, &front_wide));
+            if_err_return(rv, cell_set(front_wide, &invalid, 1, -1, -1));
+          }
         }
+      }
+      x += w;
     }
+  }
 
-    if_err_return(rv, send_cursor_if(global.cursor_x, global.cursor_y));
-    if_err_return(rv, bytebuf_flush(&global.out, global.wfd));
+  if_err_return(rv, send_cursor_if(global.cursor_x, global.cursor_y));
+  if_err_return(rv, bytebuf_flush(&global.out, global.wfd));
 
-    return TB_OK;
+  return TB_OK;
 }
 
 int tb_invalidate(void) {
-    int rv;
-    if_not_init_return();
-    if_err_return(rv, resize_cellbufs());
-    return TB_OK;
+  int rv;
+  if_not_init_return();
+  if_err_return(rv, resize_cellbufs());
+  return TB_OK;
 }
 
 int tb_set_cursor(int cx, int cy) {
-    if_not_init_return();
-    int rv;
-    if (cx < 0) cx = 0;
-    if (cy < 0) cy = 0;
-    if (global.cursor_x == -1) {
-        if_err_return(rv,
-            bytebuf_puts(&global.out, global.caps[TB_CAP_SHOW_CURSOR]));
-    }
-    if_err_return(rv, send_cursor_if(cx, cy));
-    global.cursor_x = cx;
-    global.cursor_y = cy;
-    return TB_OK;
+  if_not_init_return();
+  int rv;
+  if (cx < 0) cx = 0;
+  if (cy < 0) cy = 0;
+  if (global.cursor_x == -1) {
+    if_err_return(rv,
+        bytebuf_puts(&global.out, global.caps[TB_CAP_SHOW_CURSOR]));
+  }
+  if_err_return(rv, send_cursor_if(cx, cy));
+  global.cursor_x = cx;
+  global.cursor_y = cy;
+  return TB_OK;
 }
 
 int tb_hide_cursor(void) {
-    if_not_init_return();
-    int rv;
-    if (global.cursor_x >= 0) {
-        if_err_return(rv,
-            bytebuf_puts(&global.out, global.caps[TB_CAP_HIDE_CURSOR]));
-    }
-    global.cursor_x = -1;
-    global.cursor_y = -1;
-    return TB_OK;
+  if_not_init_return();
+  int rv;
+  if (global.cursor_x >= 0) {
+    if_err_return(rv,
+        bytebuf_puts(&global.out, global.caps[TB_CAP_HIDE_CURSOR]));
+  }
+  global.cursor_x = -1;
+  global.cursor_y = -1;
+  return TB_OK;
 }
 
 int tb_set_cell(int x, int y, uint32_t ch, uintattr_t fg, uintattr_t bg) {
-    return tb_set_cell_ex(x, y, &ch, 1, fg, bg);
+  return tb_set_cell_ex(x, y, &ch, 1, fg, bg);
 }
 
 int tb_set_cell_ex(int x, int y, uint32_t *ch, size_t nch, uintattr_t fg,
     uintattr_t bg) {
-    if_not_init_return();
-    int rv;
-    struct tb_cell *cell;
-    if_err_return(rv, cellbuf_get(&global.back, x, y, &cell));
-    if_err_return(rv, cell_set(cell, ch, nch, fg, bg));
-    return TB_OK;
+  if_not_init_return();
+  int rv;
+  struct tb_cell *cell;
+  if_err_return(rv, cellbuf_get(&global.back, x, y, &cell));
+  if_err_return(rv, cell_set(cell, ch, nch, fg, bg));
+  return TB_OK;
 }
 
 int tb_get_cell(int x, int y, int back, struct tb_cell **cell) {
-    if_not_init_return();
-    return cellbuf_get(back ? &global.back : &global.front, x, y, cell);
+  if_not_init_return();
+  return cellbuf_get(back ? &global.back : &global.front, x, y, cell);
 }
 
 int tb_extend_cell(int x, int y, uint32_t ch) {
-    if_not_init_return();
+  if_not_init_return();
 #ifdef TB_OPT_EGC
-    // TODO: iswprint ch?
-    int rv;
-    struct tb_cell *cell;
-    size_t nech;
-    if_err_return(rv, cellbuf_get(&global.back, x, y, &cell));
-    if (cell->nech > 0) { // append to ech
-        nech = cell->nech + 1;
-        if_err_return(rv, cell_reserve_ech(cell, nech + 1));
-        cell->ech[nech - 1] = ch;
-    } else { // make new ech
-        nech = 2;
-        if_err_return(rv, cell_reserve_ech(cell, nech + 1));
-        cell->ech[0] = cell->ch;
-        cell->ech[1] = ch;
-    }
-    cell->ech[nech] = '\0';
-    cell->nech = nech;
-    return TB_OK;
+  // TODO: iswprint ch?
+  int rv;
+  struct tb_cell *cell;
+  size_t nech;
+  if_err_return(rv, cellbuf_get(&global.back, x, y, &cell));
+  if (cell->nech > 0) { // append to ech
+    nech = cell->nech + 1;
+    if_err_return(rv, cell_reserve_ech(cell, nech + 1));
+    cell->ech[nech - 1] = ch;
+  } else { // make new ech
+    nech = 2;
+    if_err_return(rv, cell_reserve_ech(cell, nech + 1));
+    cell->ech[0] = cell->ch;
+    cell->ech[1] = ch;
+  }
+  cell->ech[nech] = '\0';
+  cell->nech = nech;
+  return TB_OK;
 #else
-    (void)x;
-    (void)y;
-    (void)ch;
-    return TB_ERR;
+  (void)x;
+  (void)y;
+  (void)ch;
+  return TB_ERR;
 #endif
 }
 
 int tb_set_input_mode(int mode) {
-    if_not_init_return();
+  if_not_init_return();
 
-    if (mode == TB_INPUT_CURRENT) return global.input_mode;
+  if (mode == TB_INPUT_CURRENT) return global.input_mode;
 
-    int esc_or_alt = TB_INPUT_ESC | TB_INPUT_ALT;
-    if ((mode & esc_or_alt) == 0) {
-        // neither specified; flip on ESC
-        mode |= TB_INPUT_ESC;
-    } else if ((mode & esc_or_alt) == esc_or_alt) {
-        // both specified; flip off ALT
-        mode &= ~TB_INPUT_ALT;
-    }
+  int esc_or_alt = TB_INPUT_ESC | TB_INPUT_ALT;
+  if ((mode & esc_or_alt) == 0) {
+    // neither specified; flip on ESC
+    mode |= TB_INPUT_ESC;
+  } else if ((mode & esc_or_alt) == esc_or_alt) {
+    // both specified; flip off ALT
+    mode &= ~TB_INPUT_ALT;
+  }
 
-    if (mode & TB_INPUT_MOUSE) {
-        bytebuf_puts(&global.out, TB_HARDCAP_ENTER_MOUSE);
-        bytebuf_flush(&global.out, global.wfd);
-    } else {
-        bytebuf_puts(&global.out, TB_HARDCAP_EXIT_MOUSE);
-        bytebuf_flush(&global.out, global.wfd);
-    }
+  if (mode & TB_INPUT_MOUSE) {
+    bytebuf_puts(&global.out, TB_HARDCAP_ENTER_MOUSE);
+    bytebuf_flush(&global.out, global.wfd);
+  } else {
+    bytebuf_puts(&global.out, TB_HARDCAP_EXIT_MOUSE);
+    bytebuf_flush(&global.out, global.wfd);
+  }
 
-    global.input_mode = mode;
-    return TB_OK;
+  global.input_mode = mode;
+  return TB_OK;
 }
 
 int tb_set_output_mode(int mode) {
-    if_not_init_return();
-    switch (mode) {
-        case TB_OUTPUT_CURRENT:
-            return global.output_mode;
-        case TB_OUTPUT_NORMAL:
-        case TB_OUTPUT_256:
-        case TB_OUTPUT_216:
-        case TB_OUTPUT_GRAYSCALE:
+  if_not_init_return();
+  switch (mode) {
+    case TB_OUTPUT_CURRENT:
+      return global.output_mode;
+    case TB_OUTPUT_NORMAL:
+    case TB_OUTPUT_256:
+    case TB_OUTPUT_216:
+    case TB_OUTPUT_GRAYSCALE:
 #if TB_OPT_ATTR_W >= 32
-        case TB_OUTPUT_TRUECOLOR:
+    case TB_OUTPUT_TRUECOLOR:
 #endif
-            global.last_fg = ~global.fg;
-            global.last_bg = ~global.bg;
-            global.output_mode = mode;
-            return TB_OK;
-    }
-    return TB_ERR;
+      global.last_fg = ~global.fg;
+      global.last_bg = ~global.bg;
+      global.output_mode = mode;
+      return TB_OK;
+  }
+  return TB_ERR;
 }
 
 int tb_peek_event(struct tb_event *event, int timeout_ms) {
-    if_not_init_return();
-    return wait_event(event, timeout_ms);
+  if_not_init_return();
+  return wait_event(event, timeout_ms);
 }
 
 int tb_poll_event(struct tb_event *event) {
-    if_not_init_return();
-    return wait_event(event, -1);
+  if_not_init_return();
+  return wait_event(event, -1);
 }
 
 int tb_get_fds(int *ttyfd, int *resizefd) {
-    if_not_init_return();
+  if_not_init_return();
 
-    *ttyfd = global.rfd;
-    *resizefd = global.resize_pipefd[0];
+  *ttyfd = global.rfd;
+  *resizefd = global.resize_pipefd[0];
 
-    return TB_OK;
+  return TB_OK;
 }
 
 int tb_print(int x, int y, uintattr_t fg, uintattr_t bg, const char *str) {
-    return tb_print_ex(x, y, fg, bg, NULL, str);
+  return tb_print_ex(x, y, fg, bg, NULL, str);
 }
 
 int tb_print_ex(int x, int y, uintattr_t fg, uintattr_t bg, size_t *out_w,
     const char *str) {
-    int rv, w, ix, x_prev;
-    uint32_t uni;
+  int rv, w, ix, x_prev;
+  uint32_t uni;
 
-    if_not_init_return();
+  if_not_init_return();
 
-    if (!cellbuf_in_bounds(&global.back, x, y)) {
-        return TB_ERR_OUT_OF_BOUNDS;
+  if (!cellbuf_in_bounds(&global.back, x, y)) { return TB_ERR_OUT_OF_BOUNDS; }
+
+  ix = x;
+  x_prev = x;
+  if (out_w) *out_w = 0;
+
+  while (*str) {
+    rv = tb_utf8_char_to_unicode(&uni, str);
+
+    if (rv < 0) {
+      uni = 0xfffd; // replace invalid UTF-8 char with U+FFFD
+      str += rv * -1;
+    } else if (rv > 0) {
+      str += rv;
+    } else {
+      break; // shouldn't get here
     }
 
-    ix = x;
-    x_prev = x;
-    if (out_w) *out_w = 0;
-
-    while (*str) {
-        rv = tb_utf8_char_to_unicode(&uni, str);
-
-        if (rv < 0) {
-            uni = 0xfffd; // replace invalid UTF-8 char with U+FFFD
-            str += rv * -1;
-        } else if (rv > 0) {
-            str += rv;
-        } else {
-            break; // shouldn't get here
-        }
-
-        if (uni == '\n') { // TODO: \r, \t, \v, \f, etc?
-            x = ix;
-            x_prev = x;
-            y += 1;
-            continue;
-        } else if (!tb_iswprint_ex(uni, &w)) {
-            uni = 0xfffd; // replace non-printable with U+FFFD
-            w = 1;
-        }
-
-        if (w < 0) {
-            return TB_ERR;   // shouldn't happen if iswprint
-        } else if (w == 0) { // combining character
-            if (cellbuf_in_bounds(&global.back, x_prev, y)) {
-                if_err_return(rv, tb_extend_cell(x_prev, y, uni));
-            }
-        } else {
-            if (cellbuf_in_bounds(&global.back, x, y)) {
-                if_err_return(rv, tb_set_cell(x, y, uni, fg, bg));
-            }
-            x_prev = x;
-            x += w;
-            if (out_w) *out_w += w;
-        }
+    if (uni == '\n') { // TODO: \r, \t, \v, \f, etc?
+      x = ix;
+      x_prev = x;
+      y += 1;
+      continue;
+    } else if (!tb_iswprint_ex(uni, &w)) {
+      uni = 0xfffd; // replace non-printable with U+FFFD
+      w = 1;
     }
 
-    return TB_OK;
+    if (w < 0) {
+      return TB_ERR;     // shouldn't happen if iswprint
+    } else if (w == 0) { // combining character
+      if (cellbuf_in_bounds(&global.back, x_prev, y)) {
+        if_err_return(rv, tb_extend_cell(x_prev, y, uni));
+      }
+    } else {
+      if (cellbuf_in_bounds(&global.back, x, y)) {
+        if_err_return(rv, tb_set_cell(x, y, uni, fg, bg));
+      }
+      x_prev = x;
+      x += w;
+      if (out_w) *out_w += w;
+    }
+  }
+
+  return TB_OK;
 }
 
 int tb_printf(int x, int y, uintattr_t fg, uintattr_t bg, const char *fmt,
     ...) {
-    int rv;
-    va_list vl;
-    va_start(vl, fmt);
-    rv = tb_printf_inner(x, y, fg, bg, NULL, fmt, vl);
-    va_end(vl);
-    return rv;
+  int rv;
+  va_list vl;
+  va_start(vl, fmt);
+  rv = tb_printf_inner(x, y, fg, bg, NULL, fmt, vl);
+  va_end(vl);
+  return rv;
 }
 
 int tb_printf_ex(int x, int y, uintattr_t fg, uintattr_t bg, size_t *out_w,
     const char *fmt, ...) {
-    int rv;
-    va_list vl;
-    va_start(vl, fmt);
-    rv = tb_printf_inner(x, y, fg, bg, out_w, fmt, vl);
-    va_end(vl);
-    return rv;
+  int rv;
+  va_list vl;
+  va_start(vl, fmt);
+  rv = tb_printf_inner(x, y, fg, bg, out_w, fmt, vl);
+  va_end(vl);
+  return rv;
 }
 
 int tb_send(const char *buf, size_t nbuf) {
-    return bytebuf_nputs(&global.out, buf, nbuf);
+  return bytebuf_nputs(&global.out, buf, nbuf);
 }
 
 int tb_sendf(const char *fmt, ...) {
-    int rv;
-    char buf[TB_OPT_PRINTF_BUF];
-    va_list vl;
-    va_start(vl, fmt);
-    rv = vsnprintf(buf, sizeof(buf), fmt, vl);
-    va_end(vl);
-    if (rv < 0 || rv >= (int)sizeof(buf)) {
-        return TB_ERR;
-    }
-    return tb_send(buf, (size_t)rv);
+  int rv;
+  char buf[TB_OPT_PRINTF_BUF];
+  va_list vl;
+  va_start(vl, fmt);
+  rv = vsnprintf(buf, sizeof(buf), fmt, vl);
+  va_end(vl);
+  if (rv < 0 || rv >= (int)sizeof(buf)) { return TB_ERR; }
+  return tb_send(buf, (size_t)rv);
 }
 
 int tb_set_func(int fn_type, int (*fn)(struct tb_event *, size_t *)) {
-    switch (fn_type) {
-        case TB_FUNC_EXTRACT_PRE:
-            global.fn_extract_esc_pre = fn;
-            return TB_OK;
-        case TB_FUNC_EXTRACT_POST:
-            global.fn_extract_esc_post = fn;
-            return TB_OK;
-    }
-    return TB_ERR;
+  switch (fn_type) {
+    case TB_FUNC_EXTRACT_PRE:
+      global.fn_extract_esc_pre = fn;
+      return TB_OK;
+    case TB_FUNC_EXTRACT_POST:
+      global.fn_extract_esc_post = fn;
+      return TB_OK;
+  }
+  return TB_ERR;
 }
 
 struct tb_cell *tb_cell_buffer(void) {
-    if (!global.initialized) return NULL;
-    return global.back.cells;
+  if (!global.initialized) return NULL;
+  return global.back.cells;
 }
 
 int tb_utf8_char_length(char c) {
-    return utf8_length[(unsigned char)c];
+  return utf8_length[(unsigned char)c];
 }
 
 int tb_utf8_char_to_unicode(uint32_t *out, const char *c) {
-    if (*c == '\0') return 0;
+  if (*c == '\0') return 0;
 
-    int i;
-    unsigned char len = tb_utf8_char_length(*c);
-    unsigned char mask = utf8_mask[len - 1];
-    uint32_t result = c[0] & mask;
-    for (i = 1; i < len && c[i] != '\0'; ++i) {
-        result <<= 6;
-        result |= c[i] & 0x3f;
-    }
+  int i;
+  unsigned char len = tb_utf8_char_length(*c);
+  unsigned char mask = utf8_mask[len - 1];
+  uint32_t result = c[0] & mask;
+  for (i = 1; i < len && c[i] != '\0'; ++i) {
+    result <<= 6;
+    result |= c[i] & 0x3f;
+  }
 
-    if (i != len) return i * -1;
+  if (i != len) return i * -1;
 
-    *out = result;
-    return (int)len;
+  *out = result;
+  return (int)len;
 }
 
 int tb_utf8_unicode_to_char(char *out, uint32_t c) {
-    int len = 0;
-    int first;
-    int i;
+  int len = 0;
+  int first;
+  int i;
 
-    if (c < 0x80) {
-        first = 0;
-        len = 1;
-    } else if (c < 0x800) {
-        first = 0xc0;
-        len = 2;
-    } else if (c < 0x10000) {
-        first = 0xe0;
-        len = 3;
-    } else if (c < 0x200000) {
-        first = 0xf0;
-        len = 4;
-    } else if (c < 0x4000000) {
-        first = 0xf8;
-        len = 5;
-    } else {
-        first = 0xfc;
-        len = 6;
-    }
+  if (c < 0x80) {
+    first = 0;
+    len = 1;
+  } else if (c < 0x800) {
+    first = 0xc0;
+    len = 2;
+  } else if (c < 0x10000) {
+    first = 0xe0;
+    len = 3;
+  } else if (c < 0x200000) {
+    first = 0xf0;
+    len = 4;
+  } else if (c < 0x4000000) {
+    first = 0xf8;
+    len = 5;
+  } else {
+    first = 0xfc;
+    len = 6;
+  }
 
-    for (i = len - 1; i > 0; --i) {
-        out[i] = (c & 0x3f) | 0x80;
-        c >>= 6;
-    }
-    out[0] = c | first;
-    out[len] = '\0';
+  for (i = len - 1; i > 0; --i) {
+    out[i] = (c & 0x3f) | 0x80;
+    c >>= 6;
+  }
+  out[0] = c | first;
+  out[len] = '\0';
 
-    return len;
+  return len;
 }
 
 int tb_last_errno(void) {
-    return global.last_errno;
+  return global.last_errno;
 }
 
 const char *tb_strerror(int err) {
-    switch (err) {
-        case TB_OK:
-            return "Success";
-        case TB_ERR_NEED_MORE:
-            return "Not enough input";
-        case TB_ERR_INIT_ALREADY:
-            return "Termbox initialized already";
-        case TB_ERR_MEM:
-            return "Out of memory";
-        case TB_ERR_NO_EVENT:
-            return "No event";
-        case TB_ERR_NO_TERM:
-            return "No TERM in environment";
-        case TB_ERR_NOT_INIT:
-            return "Termbox not initialized";
-        case TB_ERR_OUT_OF_BOUNDS:
-            return "Out of bounds";
-        case TB_ERR_UNSUPPORTED_TERM:
-            return "Unsupported terminal";
-        case TB_ERR_CAP_COLLISION:
-            return "Termcaps collision";
-        case TB_ERR_RESIZE_SSCANF:
-            return "Terminal width/height not received by sscanf() after "
-                   "resize";
-        case TB_ERR:
-        case TB_ERR_INIT_OPEN:
-        case TB_ERR_READ:
-        case TB_ERR_RESIZE_IOCTL:
-        case TB_ERR_RESIZE_PIPE:
-        case TB_ERR_RESIZE_SIGACTION:
-        case TB_ERR_POLL:
-        case TB_ERR_TCGETATTR:
-        case TB_ERR_TCSETATTR:
-        case TB_ERR_RESIZE_WRITE:
-        case TB_ERR_RESIZE_POLL:
-        case TB_ERR_RESIZE_READ:
-        default:
-            strerror_r(global.last_errno, global.errbuf, sizeof(global.errbuf));
-            return (const char *)global.errbuf;
-    }
+  switch (err) {
+    case TB_OK:
+      return "Success";
+    case TB_ERR_NEED_MORE:
+      return "Not enough input";
+    case TB_ERR_INIT_ALREADY:
+      return "Termbox initialized already";
+    case TB_ERR_MEM:
+      return "Out of memory";
+    case TB_ERR_NO_EVENT:
+      return "No event";
+    case TB_ERR_NO_TERM:
+      return "No TERM in environment";
+    case TB_ERR_NOT_INIT:
+      return "Termbox not initialized";
+    case TB_ERR_OUT_OF_BOUNDS:
+      return "Out of bounds";
+    case TB_ERR_UNSUPPORTED_TERM:
+      return "Unsupported terminal";
+    case TB_ERR_CAP_COLLISION:
+      return "Termcaps collision";
+    case TB_ERR_RESIZE_SSCANF:
+      return "Terminal width/height not received by sscanf() after "
+             "resize";
+    case TB_ERR:
+    case TB_ERR_INIT_OPEN:
+    case TB_ERR_READ:
+    case TB_ERR_RESIZE_IOCTL:
+    case TB_ERR_RESIZE_PIPE:
+    case TB_ERR_RESIZE_SIGACTION:
+    case TB_ERR_POLL:
+    case TB_ERR_TCGETATTR:
+    case TB_ERR_TCSETATTR:
+    case TB_ERR_RESIZE_WRITE:
+    case TB_ERR_RESIZE_POLL:
+    case TB_ERR_RESIZE_READ:
+    default:
+      strerror_r(global.last_errno, global.errbuf, sizeof(global.errbuf));
+      return (const char *)global.errbuf;
+  }
 }
 
 int tb_has_truecolor(void) {
 #if TB_OPT_ATTR_W >= 32
-    return 1;
+  return 1;
 #else
-    return 0;
+  return 0;
 #endif
 }
 
 int tb_has_egc(void) {
 #ifdef TB_OPT_EGC
-    return 1;
+  return 1;
 #else
-    return 0;
+  return 0;
 #endif
 }
 
 int tb_attr_width(void) {
-    return TB_OPT_ATTR_W;
+  return TB_OPT_ATTR_W;
 }
 
 const char *tb_version(void) {
-    return TB_VERSION_STR;
+  return TB_VERSION_STR;
 }
 
 static int tb_reset(void) {
-    int ttyfd_open = global.ttyfd_open;
-    memset(&global, 0, sizeof(global));
-    global.ttyfd = -1;
-    global.rfd = -1;
-    global.wfd = -1;
-    global.ttyfd_open = ttyfd_open;
-    global.resize_pipefd[0] = -1;
-    global.resize_pipefd[1] = -1;
-    global.width = -1;
-    global.height = -1;
-    global.cursor_x = -1;
-    global.cursor_y = -1;
-    global.last_x = -1;
-    global.last_y = -1;
-    global.fg = TB_DEFAULT;
-    global.bg = TB_DEFAULT;
-    global.last_fg = ~global.fg;
-    global.last_bg = ~global.bg;
-    global.input_mode = TB_INPUT_ESC;
-    global.output_mode = TB_OUTPUT_NORMAL;
-    return TB_OK;
+  int ttyfd_open = global.ttyfd_open;
+  memset(&global, 0, sizeof(global));
+  global.ttyfd = -1;
+  global.rfd = -1;
+  global.wfd = -1;
+  global.ttyfd_open = ttyfd_open;
+  global.resize_pipefd[0] = -1;
+  global.resize_pipefd[1] = -1;
+  global.width = -1;
+  global.height = -1;
+  global.cursor_x = -1;
+  global.cursor_y = -1;
+  global.last_x = -1;
+  global.last_y = -1;
+  global.fg = TB_DEFAULT;
+  global.bg = TB_DEFAULT;
+  global.last_fg = ~global.fg;
+  global.last_bg = ~global.bg;
+  global.input_mode = TB_INPUT_ESC;
+  global.output_mode = TB_OUTPUT_NORMAL;
+  return TB_OK;
 }
 
 static int init_term_attrs(void) {
-    if (global.ttyfd < 0) return TB_OK;
+  if (global.ttyfd < 0) return TB_OK;
 
-    if (tcgetattr(global.ttyfd, &global.orig_tios) != 0) {
-        global.last_errno = errno;
-        return TB_ERR_TCGETATTR;
-    }
+  if (tcgetattr(global.ttyfd, &global.orig_tios) != 0) {
+    global.last_errno = errno;
+    return TB_ERR_TCGETATTR;
+  }
 
-    struct termios tios;
-    memcpy(&tios, &global.orig_tios, sizeof(tios));
-    global.has_orig_tios = 1;
+  struct termios tios;
+  memcpy(&tios, &global.orig_tios, sizeof(tios));
+  global.has_orig_tios = 1;
 
-    cfmakeraw(&tios);
-    tios.c_cc[VMIN] = 1;
-    tios.c_cc[VTIME] = 0;
+  cfmakeraw(&tios);
+  tios.c_cc[VMIN] = 1;
+  tios.c_cc[VTIME] = 0;
 
-    if (tcsetattr(global.ttyfd, TCSAFLUSH, &tios) != 0) {
-        global.last_errno = errno;
-        return TB_ERR_TCSETATTR;
-    }
+  if (tcsetattr(global.ttyfd, TCSAFLUSH, &tios) != 0) {
+    global.last_errno = errno;
+    return TB_ERR_TCSETATTR;
+  }
 
-    return TB_OK;
+  return TB_OK;
 }
 
 int tb_printf_inner(int x, int y, uintattr_t fg, uintattr_t bg, size_t *out_w,
     const char *fmt, va_list vl) {
-    int rv;
-    char buf[TB_OPT_PRINTF_BUF];
-    rv = vsnprintf(buf, sizeof(buf), fmt, vl);
-    if (rv < 0 || rv >= (int)sizeof(buf)) {
-        return TB_ERR;
-    }
-    return tb_print_ex(x, y, fg, bg, out_w, buf);
+  int rv;
+  char buf[TB_OPT_PRINTF_BUF];
+  rv = vsnprintf(buf, sizeof(buf), fmt, vl);
+  if (rv < 0 || rv >= (int)sizeof(buf)) { return TB_ERR; }
+  return tb_print_ex(x, y, fg, bg, out_w, buf);
 }
 
 static int init_term_caps(void) {
-    if (load_terminfo() == TB_OK) {
-        return parse_terminfo_caps();
-    }
-    return load_builtin_caps();
+  if (load_terminfo() == TB_OK) { return parse_terminfo_caps(); }
+  return load_builtin_caps();
 }
 
 static int init_cap_trie(void) {
-    int rv, i;
+  int rv, i;
 
-    // Add caps from terminfo or built-in
-    //
-    // Collisions are expected as some terminfo entries have dupes. (For
-    // example, att605-pc collides on TB_CAP_F4 and TB_CAP_DELETE.) First cap
-    // in TB_CAP_* index order will win.
-    //
-    // TODO: Reorder TB_CAP_* so more critical caps come first.
-    for (i = 0; i < TB_CAP__COUNT_KEYS; i++) {
-        rv = cap_trie_add(global.caps[i], tb_key_i(i), 0);
-        if (rv != TB_OK && rv != TB_ERR_CAP_COLLISION) return rv;
-    }
+  // Add caps from terminfo or built-in
+  //
+  // Collisions are expected as some terminfo entries have dupes. (For
+  // example, att605-pc collides on TB_CAP_F4 and TB_CAP_DELETE.) First cap
+  // in TB_CAP_* index order will win.
+  //
+  // TODO: Reorder TB_CAP_* so more critical caps come first.
+  for (i = 0; i < TB_CAP__COUNT_KEYS; i++) {
+    rv = cap_trie_add(global.caps[i], tb_key_i(i), 0);
+    if (rv != TB_OK && rv != TB_ERR_CAP_COLLISION) return rv;
+  }
 
-    // Add built-in mod caps
-    //
-    // Collisions are OK here as well. This can happen if global.caps collides
-    // with builtin_mod_caps. It is desirable to give precedence to global.caps
-    // here.
-    for (i = 0; builtin_mod_caps[i].cap != NULL; i++) {
-        rv = cap_trie_add(builtin_mod_caps[i].cap, builtin_mod_caps[i].key,
-            builtin_mod_caps[i].mod);
-        if (rv != TB_OK && rv != TB_ERR_CAP_COLLISION) return rv;
-    }
+  // Add built-in mod caps
+  //
+  // Collisions are OK here as well. This can happen if global.caps collides
+  // with builtin_mod_caps. It is desirable to give precedence to global.caps
+  // here.
+  for (i = 0; builtin_mod_caps[i].cap != NULL; i++) {
+    rv = cap_trie_add(builtin_mod_caps[i].cap, builtin_mod_caps[i].key,
+        builtin_mod_caps[i].mod);
+    if (rv != TB_OK && rv != TB_ERR_CAP_COLLISION) return rv;
+  }
 
-    return TB_OK;
+  return TB_OK;
 }
 
 static int cap_trie_add(const char *cap, uint16_t key, uint8_t mod) {
-    struct cap_trie *next, *node = &global.cap_trie;
-    size_t i, j;
+  struct cap_trie *next, *node = &global.cap_trie;
+  size_t i, j;
 
-    if (!cap || strlen(cap) <= 0) return TB_OK; // Nothing to do for empty caps
+  if (!cap || strlen(cap) <= 0) return TB_OK; // Nothing to do for empty caps
 
-    for (i = 0; cap[i] != '\0'; i++) {
-        char c = cap[i];
-        next = NULL;
+  for (i = 0; cap[i] != '\0'; i++) {
+    char c = cap[i];
+    next = NULL;
 
-        // Check if c is already a child of node
-        for (j = 0; j < node->nchildren; j++) {
-            if (node->children[j].c == c) {
-                next = &node->children[j];
-                break;
-            }
-        }
-        if (!next) {
-            // We need to add a new child to node
-            node->nchildren += 1;
-            node->children = (struct cap_trie *)tb_realloc(node->children,
-                sizeof(*node) * node->nchildren);
-            if (!node->children) {
-                return TB_ERR_MEM;
-            }
-            next = &node->children[node->nchildren - 1];
-            memset(next, 0, sizeof(*next));
-            next->c = c;
-        }
-
-        // Continue
-        node = next;
+    // Check if c is already a child of node
+    for (j = 0; j < node->nchildren; j++) {
+      if (node->children[j].c == c) {
+        next = &node->children[j];
+        break;
+      }
+    }
+    if (!next) {
+      // We need to add a new child to node
+      node->nchildren += 1;
+      node->children = (struct cap_trie *)tb_realloc(node->children,
+          sizeof(*node) * node->nchildren);
+      if (!node->children) { return TB_ERR_MEM; }
+      next = &node->children[node->nchildren - 1];
+      memset(next, 0, sizeof(*next));
+      next->c = c;
     }
 
-    if (node->is_leaf) {
-        // Already a leaf here
-        return TB_ERR_CAP_COLLISION;
-    }
+    // Continue
+    node = next;
+  }
 
-    node->is_leaf = 1;
-    node->key = key;
-    node->mod = mod;
-    return TB_OK;
+  if (node->is_leaf) {
+    // Already a leaf here
+    return TB_ERR_CAP_COLLISION;
+  }
+
+  node->is_leaf = 1;
+  node->key = key;
+  node->mod = mod;
+  return TB_OK;
 }
 
 static int cap_trie_find(const char *buf, size_t nbuf, struct cap_trie **last,
     size_t *depth) {
-    struct cap_trie *next, *node = &global.cap_trie;
-    size_t i, j;
-    *last = node;
-    *depth = 0;
-    for (i = 0; i < nbuf; i++) {
-        char c = buf[i];
-        next = NULL;
+  struct cap_trie *next, *node = &global.cap_trie;
+  size_t i, j;
+  *last = node;
+  *depth = 0;
+  for (i = 0; i < nbuf; i++) {
+    char c = buf[i];
+    next = NULL;
 
-        // Find c in node.children
-        for (j = 0; j < node->nchildren; j++) {
-            if (node->children[j].c == c) {
-                next = &node->children[j];
-                break;
-            }
-        }
-        if (!next) {
-            // Not found
-            return TB_OK;
-        }
-        node = next;
-        *last = node;
-        *depth += 1;
-        if (node->is_leaf && node->nchildren < 1) {
-            break;
-        }
+    // Find c in node.children
+    for (j = 0; j < node->nchildren; j++) {
+      if (node->children[j].c == c) {
+        next = &node->children[j];
+        break;
+      }
     }
-    return TB_OK;
+    if (!next) {
+      // Not found
+      return TB_OK;
+    }
+    node = next;
+    *last = node;
+    *depth += 1;
+    if (node->is_leaf && node->nchildren < 1) { break; }
+  }
+  return TB_OK;
 }
 
 static int cap_trie_deinit(struct cap_trie *node) {
-    size_t j;
-    for (j = 0; j < node->nchildren; j++) {
-        cap_trie_deinit(&node->children[j]);
-    }
-    if (node->children) tb_free(node->children);
-    memset(node, 0, sizeof(*node));
-    return TB_OK;
+  size_t j;
+  for (j = 0; j < node->nchildren; j++) { cap_trie_deinit(&node->children[j]); }
+  if (node->children) tb_free(node->children);
+  memset(node, 0, sizeof(*node));
+  return TB_OK;
 }
 
 static int init_resize_handler(void) {
-    if (pipe(global.resize_pipefd) != 0) {
-        global.last_errno = errno;
-        return TB_ERR_RESIZE_PIPE;
-    }
+  if (pipe(global.resize_pipefd) != 0) {
+    global.last_errno = errno;
+    return TB_ERR_RESIZE_PIPE;
+  }
 
-    struct sigaction sa;
-    memset(&sa, 0, sizeof(sa));
-    sa.sa_handler = handle_resize;
-    if (sigaction(SIGWINCH, &sa, NULL) != 0) {
-        global.last_errno = errno;
-        return TB_ERR_RESIZE_SIGACTION;
-    }
+  struct sigaction sa;
+  memset(&sa, 0, sizeof(sa));
+  sa.sa_handler = handle_resize;
+  if (sigaction(SIGWINCH, &sa, NULL) != 0) {
+    global.last_errno = errno;
+    return TB_ERR_RESIZE_SIGACTION;
+  }
 
-    return TB_OK;
+  return TB_OK;
 }
 
 static int send_init_escape_codes(void) {
-    int rv;
-    if_err_return(rv, bytebuf_puts(&global.out, global.caps[TB_CAP_ENTER_CA]));
-    if_err_return(rv,
-        bytebuf_puts(&global.out, global.caps[TB_CAP_ENTER_KEYPAD]));
-    if_err_return(rv,
-        bytebuf_puts(&global.out, global.caps[TB_CAP_HIDE_CURSOR]));
-    return TB_OK;
+  int rv;
+  if_err_return(rv, bytebuf_puts(&global.out, global.caps[TB_CAP_ENTER_CA]));
+  if_err_return(rv,
+      bytebuf_puts(&global.out, global.caps[TB_CAP_ENTER_KEYPAD]));
+  if_err_return(rv, bytebuf_puts(&global.out, global.caps[TB_CAP_HIDE_CURSOR]));
+  return TB_OK;
 }
 
 static int send_clear(void) {
-    int rv;
+  int rv;
 
-    if_err_return(rv, send_attr(global.fg, global.bg));
-    if_err_return(rv,
-        bytebuf_puts(&global.out, global.caps[TB_CAP_CLEAR_SCREEN]));
+  if_err_return(rv, send_attr(global.fg, global.bg));
+  if_err_return(rv,
+      bytebuf_puts(&global.out, global.caps[TB_CAP_CLEAR_SCREEN]));
 
-    if_err_return(rv, send_cursor_if(global.cursor_x, global.cursor_y));
-    if_err_return(rv, bytebuf_flush(&global.out, global.wfd));
+  if_err_return(rv, send_cursor_if(global.cursor_x, global.cursor_y));
+  if_err_return(rv, bytebuf_flush(&global.out, global.wfd));
 
-    global.last_x = -1;
-    global.last_y = -1;
+  global.last_x = -1;
+  global.last_y = -1;
 
-    return TB_OK;
+  return TB_OK;
 }
 
 static int update_term_size(void) {
-    int rv, ioctl_errno;
+  int rv, ioctl_errno;
 
-    if (global.ttyfd < 0) return TB_OK;
+  if (global.ttyfd < 0) return TB_OK;
 
-    struct winsize sz;
-    memset(&sz, 0, sizeof(sz));
+  struct winsize sz;
+  memset(&sz, 0, sizeof(sz));
 
-    // Try ioctl TIOCGWINSZ
-    if (ioctl(global.ttyfd, TIOCGWINSZ, &sz) == 0) {
-        global.width = sz.ws_col;
-        global.height = sz.ws_row;
-        return TB_OK;
-    }
-    ioctl_errno = errno;
+  // Try ioctl TIOCGWINSZ
+  if (ioctl(global.ttyfd, TIOCGWINSZ, &sz) == 0) {
+    global.width = sz.ws_col;
+    global.height = sz.ws_row;
+    return TB_OK;
+  }
+  ioctl_errno = errno;
 
-    // Try >cursor(9999,9999), >u7, <u6
-    if_ok_return(rv, update_term_size_via_esc());
+  // Try >cursor(9999,9999), >u7, <u6
+  if_ok_return(rv, update_term_size_via_esc());
 
-    global.last_errno = ioctl_errno;
-    return TB_ERR_RESIZE_IOCTL;
+  global.last_errno = ioctl_errno;
+  return TB_ERR_RESIZE_IOCTL;
 }
 
 static int update_term_size_via_esc(void) {
@@ -3122,1185 +3104,1158 @@ static int update_term_size_via_esc(void) {
 #define TB_RESIZE_FALLBACK_MS 1000
 #endif
 
-    char move_and_report[] = "\x1b[9999;9999H\x1b[6n";
-    ssize_t write_rv =
-        write(global.wfd, move_and_report, strlen(move_and_report));
-    if (write_rv != (ssize_t)strlen(move_and_report)) {
-        return TB_ERR_RESIZE_WRITE;
-    }
+  char move_and_report[] = "\x1b[9999;9999H\x1b[6n";
+  ssize_t write_rv =
+      write(global.wfd, move_and_report, strlen(move_and_report));
+  if (write_rv != (ssize_t)strlen(move_and_report)) {
+    return TB_ERR_RESIZE_WRITE;
+  }
 
-    fd_set fds;
-    FD_ZERO(&fds);
-    FD_SET(global.rfd, &fds);
+  fd_set fds;
+  FD_ZERO(&fds);
+  FD_SET(global.rfd, &fds);
 
-    struct timeval timeout;
-    timeout.tv_sec = 0;
-    timeout.tv_usec = TB_RESIZE_FALLBACK_MS * 1000;
+  struct timeval timeout;
+  timeout.tv_sec = 0;
+  timeout.tv_usec = TB_RESIZE_FALLBACK_MS * 1000;
 
-    int select_rv = select(global.rfd + 1, &fds, NULL, NULL, &timeout);
+  int select_rv = select(global.rfd + 1, &fds, NULL, NULL, &timeout);
 
-    if (select_rv != 1) {
-        global.last_errno = errno;
-        return TB_ERR_RESIZE_POLL;
-    }
+  if (select_rv != 1) {
+    global.last_errno = errno;
+    return TB_ERR_RESIZE_POLL;
+  }
 
-    char buf[TB_OPT_READ_BUF];
-    ssize_t read_rv = read(global.rfd, buf, sizeof(buf) - 1);
-    if (read_rv < 1) {
-        global.last_errno = errno;
-        return TB_ERR_RESIZE_READ;
-    }
-    buf[read_rv] = '\0';
+  char buf[TB_OPT_READ_BUF];
+  ssize_t read_rv = read(global.rfd, buf, sizeof(buf) - 1);
+  if (read_rv < 1) {
+    global.last_errno = errno;
+    return TB_ERR_RESIZE_READ;
+  }
+  buf[read_rv] = '\0';
 
-    int rw, rh;
-    if (sscanf(buf, "\x1b[%d;%dR", &rh, &rw) != 2) {
-        return TB_ERR_RESIZE_SSCANF;
-    }
+  int rw, rh;
+  if (sscanf(buf, "\x1b[%d;%dR", &rh, &rw) != 2) {
+    return TB_ERR_RESIZE_SSCANF;
+  }
 
-    global.width = rw;
-    global.height = rh;
-    return TB_OK;
+  global.width = rw;
+  global.height = rh;
+  return TB_OK;
 }
 
 static int init_cellbuf(void) {
-    int rv;
-    if_err_return(rv, cellbuf_init(&global.back, global.width, global.height));
-    if_err_return(rv, cellbuf_init(&global.front, global.width, global.height));
-    if_err_return(rv, cellbuf_clear(&global.back));
-    if_err_return(rv, cellbuf_clear(&global.front));
-    return TB_OK;
+  int rv;
+  if_err_return(rv, cellbuf_init(&global.back, global.width, global.height));
+  if_err_return(rv, cellbuf_init(&global.front, global.width, global.height));
+  if_err_return(rv, cellbuf_clear(&global.back));
+  if_err_return(rv, cellbuf_clear(&global.front));
+  return TB_OK;
 }
 
 static int tb_deinit(void) {
-    if (global.caps[0] != NULL && global.wfd >= 0) {
-        bytebuf_puts(&global.out, global.caps[TB_CAP_SHOW_CURSOR]);
-        bytebuf_puts(&global.out, global.caps[TB_CAP_SGR0]);
-        bytebuf_puts(&global.out, global.caps[TB_CAP_CLEAR_SCREEN]);
-        bytebuf_puts(&global.out, global.caps[TB_CAP_EXIT_CA]);
-        bytebuf_puts(&global.out, global.caps[TB_CAP_EXIT_KEYPAD]);
-        bytebuf_puts(&global.out, TB_HARDCAP_EXIT_MOUSE);
-        bytebuf_flush(&global.out, global.wfd);
+  if (global.caps[0] != NULL && global.wfd >= 0) {
+    bytebuf_puts(&global.out, global.caps[TB_CAP_SHOW_CURSOR]);
+    bytebuf_puts(&global.out, global.caps[TB_CAP_SGR0]);
+    bytebuf_puts(&global.out, global.caps[TB_CAP_CLEAR_SCREEN]);
+    bytebuf_puts(&global.out, global.caps[TB_CAP_EXIT_CA]);
+    bytebuf_puts(&global.out, global.caps[TB_CAP_EXIT_KEYPAD]);
+    bytebuf_puts(&global.out, TB_HARDCAP_EXIT_MOUSE);
+    bytebuf_flush(&global.out, global.wfd);
+  }
+  if (global.ttyfd >= 0) {
+    if (global.has_orig_tios) {
+      tcsetattr(global.ttyfd, TCSAFLUSH, &global.orig_tios);
     }
-    if (global.ttyfd >= 0) {
-        if (global.has_orig_tios) {
-            tcsetattr(global.ttyfd, TCSAFLUSH, &global.orig_tios);
-        }
-        if (global.ttyfd_open) {
-            close(global.ttyfd);
-            global.ttyfd_open = 0;
-        }
+    if (global.ttyfd_open) {
+      close(global.ttyfd);
+      global.ttyfd_open = 0;
     }
+  }
 
-    struct sigaction sa;
-    memset(&sa, 0, sizeof(sa));
-    sa.sa_handler = SIG_DFL;
-    sigaction(SIGWINCH, &sa, NULL);
-    if (global.resize_pipefd[0] >= 0) close(global.resize_pipefd[0]);
-    if (global.resize_pipefd[1] >= 0) close(global.resize_pipefd[1]);
+  struct sigaction sa;
+  memset(&sa, 0, sizeof(sa));
+  sa.sa_handler = SIG_DFL;
+  sigaction(SIGWINCH, &sa, NULL);
+  if (global.resize_pipefd[0] >= 0) close(global.resize_pipefd[0]);
+  if (global.resize_pipefd[1] >= 0) close(global.resize_pipefd[1]);
 
-    cellbuf_free(&global.back);
-    cellbuf_free(&global.front);
-    bytebuf_free(&global.in);
-    bytebuf_free(&global.out);
+  cellbuf_free(&global.back);
+  cellbuf_free(&global.front);
+  bytebuf_free(&global.in);
+  bytebuf_free(&global.out);
 
-    if (global.terminfo) tb_free(global.terminfo);
+  if (global.terminfo) tb_free(global.terminfo);
 
-    cap_trie_deinit(&global.cap_trie);
+  cap_trie_deinit(&global.cap_trie);
 
-    tb_reset();
-    return TB_OK;
+  tb_reset();
+  return TB_OK;
 }
 
 static int load_terminfo(void) {
-    int rv;
-    char tmp[TB_PATH_MAX];
+  int rv;
+  char tmp[TB_PATH_MAX];
 
-    // See terminfo(5) "Fetching Compiled Descriptions" for a description of
-    // this behavior. Some of these paths are compile-time ncurses options, so
-    // best guesses are used here.
-    const char *term = getenv("TERM");
-    if (!term) return TB_ERR;
+  // See terminfo(5) "Fetching Compiled Descriptions" for a description of
+  // this behavior. Some of these paths are compile-time ncurses options, so
+  // best guesses are used here.
+  const char *term = getenv("TERM");
+  if (!term) return TB_ERR;
 
-    // If TERMINFO is set, try that directory first
-    const char *terminfo = getenv("TERMINFO");
-    if (terminfo) if_ok_return(rv, load_terminfo_from_path(terminfo, term));
+  // If TERMINFO is set, try that directory first
+  const char *terminfo = getenv("TERMINFO");
+  if (terminfo) if_ok_return(rv, load_terminfo_from_path(terminfo, term));
 
-    // Next try ~/.terminfo
-    const char *home = getenv("HOME");
-    if (home) {
-        snprintf_or_return(rv, tmp, sizeof(tmp), "%s/.terminfo", home);
-        if_ok_return(rv, load_terminfo_from_path(tmp, term));
+  // Next try ~/.terminfo
+  const char *home = getenv("HOME");
+  if (home) {
+    snprintf_or_return(rv, tmp, sizeof(tmp), "%s/.terminfo", home);
+    if_ok_return(rv, load_terminfo_from_path(tmp, term));
+  }
+
+  // Next try TERMINFO_DIRS
+  //
+  // Note, empty entries are supposed to be interpretted as the "compiled-in
+  // default", which is of course system-dependent. Previously /etc/terminfo
+  // was used here. Let's skip empty entries altogether rather than give
+  // precedence to a guess, and check common paths after this loop.
+  const char *dirs = getenv("TERMINFO_DIRS");
+  if (dirs) {
+    snprintf_or_return(rv, tmp, sizeof(tmp), "%s", dirs);
+    char *dir = strtok(tmp, ":");
+    while (dir) {
+      const char *cdir = dir;
+      if (*cdir != '\0') {
+        if_ok_return(rv, load_terminfo_from_path(cdir, term));
+      }
+      dir = strtok(NULL, ":");
     }
-
-    // Next try TERMINFO_DIRS
-    //
-    // Note, empty entries are supposed to be interpretted as the "compiled-in
-    // default", which is of course system-dependent. Previously /etc/terminfo
-    // was used here. Let's skip empty entries altogether rather than give
-    // precedence to a guess, and check common paths after this loop.
-    const char *dirs = getenv("TERMINFO_DIRS");
-    if (dirs) {
-        snprintf_or_return(rv, tmp, sizeof(tmp), "%s", dirs);
-        char *dir = strtok(tmp, ":");
-        while (dir) {
-            const char *cdir = dir;
-            if (*cdir != '\0') {
-                if_ok_return(rv, load_terminfo_from_path(cdir, term));
-            }
-            dir = strtok(NULL, ":");
-        }
-    }
+  }
 
 #ifdef TB_TERMINFO_DIR
-    if_ok_return(rv, load_terminfo_from_path(TB_TERMINFO_DIR, term));
+  if_ok_return(rv, load_terminfo_from_path(TB_TERMINFO_DIR, term));
 #endif
-    if_ok_return(rv, load_terminfo_from_path("/usr/local/etc/terminfo", term));
-    if_ok_return(rv,
-        load_terminfo_from_path("/usr/local/share/terminfo", term));
-    if_ok_return(rv, load_terminfo_from_path("/usr/local/lib/terminfo", term));
-    if_ok_return(rv, load_terminfo_from_path("/etc/terminfo", term));
-    if_ok_return(rv, load_terminfo_from_path("/usr/share/terminfo", term));
-    if_ok_return(rv, load_terminfo_from_path("/usr/lib/terminfo", term));
-    if_ok_return(rv, load_terminfo_from_path("/usr/share/lib/terminfo", term));
-    if_ok_return(rv, load_terminfo_from_path("/lib/terminfo", term));
+  if_ok_return(rv, load_terminfo_from_path("/usr/local/etc/terminfo", term));
+  if_ok_return(rv, load_terminfo_from_path("/usr/local/share/terminfo", term));
+  if_ok_return(rv, load_terminfo_from_path("/usr/local/lib/terminfo", term));
+  if_ok_return(rv, load_terminfo_from_path("/etc/terminfo", term));
+  if_ok_return(rv, load_terminfo_from_path("/usr/share/terminfo", term));
+  if_ok_return(rv, load_terminfo_from_path("/usr/lib/terminfo", term));
+  if_ok_return(rv, load_terminfo_from_path("/usr/share/lib/terminfo", term));
+  if_ok_return(rv, load_terminfo_from_path("/lib/terminfo", term));
 
-    return TB_ERR;
+  return TB_ERR;
 }
 
 static int load_terminfo_from_path(const char *path, const char *term) {
-    int rv;
-    char tmp[TB_PATH_MAX];
+  int rv;
+  char tmp[TB_PATH_MAX];
 
-    // Look for term at this terminfo location, e.g., <terminfo>/x/xterm
-    snprintf_or_return(rv, tmp, sizeof(tmp), "%s/%c/%s", path, term[0], term);
-    if_ok_return(rv, read_terminfo_path(tmp));
+  // Look for term at this terminfo location, e.g., <terminfo>/x/xterm
+  snprintf_or_return(rv, tmp, sizeof(tmp), "%s/%c/%s", path, term[0], term);
+  if_ok_return(rv, read_terminfo_path(tmp));
 
 #ifdef __APPLE__
-    // Try the Darwin equivalent path, e.g., <terminfo>/78/xterm
-    snprintf_or_return(rv, tmp, sizeof(tmp), "%s/%x/%s", path, term[0], term);
-    return read_terminfo_path(tmp);
+  // Try the Darwin equivalent path, e.g., <terminfo>/78/xterm
+  snprintf_or_return(rv, tmp, sizeof(tmp), "%s/%x/%s", path, term[0], term);
+  return read_terminfo_path(tmp);
 #endif
 
-    return TB_ERR;
+  return TB_ERR;
 }
 
 static int read_terminfo_path(const char *path) {
-    FILE *fp = fopen(path, "rb");
-    if (!fp) return TB_ERR;
+  FILE *fp = fopen(path, "rb");
+  if (!fp) return TB_ERR;
 
-    struct stat st;
-    if (fstat(fileno(fp), &st) != 0) {
-        fclose(fp);
-        return TB_ERR;
-    }
-
-    size_t fsize = st.st_size;
-    char *data = (char *)tb_malloc(fsize);
-    if (!data) {
-        fclose(fp);
-        return TB_ERR;
-    }
-
-    if (fread(data, 1, fsize, fp) != fsize) {
-        fclose(fp);
-        tb_free(data);
-        return TB_ERR;
-    }
-
-    global.terminfo = data;
-    global.nterminfo = fsize;
-
+  struct stat st;
+  if (fstat(fileno(fp), &st) != 0) {
     fclose(fp);
-    return TB_OK;
+    return TB_ERR;
+  }
+
+  size_t fsize = st.st_size;
+  char *data = (char *)tb_malloc(fsize);
+  if (!data) {
+    fclose(fp);
+    return TB_ERR;
+  }
+
+  if (fread(data, 1, fsize, fp) != fsize) {
+    fclose(fp);
+    tb_free(data);
+    return TB_ERR;
+  }
+
+  global.terminfo = data;
+  global.nterminfo = fsize;
+
+  fclose(fp);
+  return TB_OK;
 }
 
 static int parse_terminfo_caps(void) {
-    // See term(5) "LEGACY STORAGE FORMAT" and "EXTENDED STORAGE FORMAT" for a
-    // description of this behavior.
+  // See term(5) "LEGACY STORAGE FORMAT" and "EXTENDED STORAGE FORMAT" for a
+  // description of this behavior.
 
-    // Ensure there's at least a header's worth of data
-    if (global.nterminfo < 6 * (int)sizeof(int16_t)) return TB_ERR;
+  // Ensure there's at least a header's worth of data
+  if (global.nterminfo < 6 * (int)sizeof(int16_t)) return TB_ERR;
 
-    int16_t magic_number, nbytes_names, nbytes_bools, num_ints, num_offsets,
-        nbytes_strings;
-    size_t nbytes_header = 6 * sizeof(int16_t);
-    // header[0] the magic number (octal 0432 or 01036)
-    // header[1] the size, in bytes, of the names section
-    // header[2] the number of bytes in the boolean section
-    // header[3] the number of short integers in the numbers section
-    // header[4] the number of offsets (short integers) in the strings section
-    // header[5] the size, in bytes, of the string table
-    get_terminfo_int16(0 * sizeof(int16_t), &magic_number);
-    get_terminfo_int16(1 * sizeof(int16_t), &nbytes_names);
-    get_terminfo_int16(2 * sizeof(int16_t), &nbytes_bools);
-    get_terminfo_int16(3 * sizeof(int16_t), &num_ints);
-    get_terminfo_int16(4 * sizeof(int16_t), &num_offsets);
-    get_terminfo_int16(5 * sizeof(int16_t), &nbytes_strings);
+  int16_t magic_number, nbytes_names, nbytes_bools, num_ints, num_offsets,
+      nbytes_strings;
+  size_t nbytes_header = 6 * sizeof(int16_t);
+  // header[0] the magic number (octal 0432 or 01036)
+  // header[1] the size, in bytes, of the names section
+  // header[2] the number of bytes in the boolean section
+  // header[3] the number of short integers in the numbers section
+  // header[4] the number of offsets (short integers) in the strings section
+  // header[5] the size, in bytes, of the string table
+  get_terminfo_int16(0 * sizeof(int16_t), &magic_number);
+  get_terminfo_int16(1 * sizeof(int16_t), &nbytes_names);
+  get_terminfo_int16(2 * sizeof(int16_t), &nbytes_bools);
+  get_terminfo_int16(3 * sizeof(int16_t), &num_ints);
+  get_terminfo_int16(4 * sizeof(int16_t), &num_offsets);
+  get_terminfo_int16(5 * sizeof(int16_t), &nbytes_strings);
 
-    // Legacy ints are 16-bit, extended ints are 32-bit
-    const int bytes_per_int = magic_number == 01036 ? 4  // 32-bit
-                                                    : 2; // 16-bit
+  // Legacy ints are 16-bit, extended ints are 32-bit
+  const int bytes_per_int = magic_number == 01036 ? 4  // 32-bit
+                                                  : 2; // 16-bit
 
-    // > Between the boolean section and the number section, a null byte will
-    // > be inserted, if necessary, to ensure that the number section begins on
-    // > an even byte
-    const int align_offset = (nbytes_names + nbytes_bools) % 2 != 0 ? 1 : 0;
+  // > Between the boolean section and the number section, a null byte will
+  // > be inserted, if necessary, to ensure that the number section begins on
+  // > an even byte
+  const int align_offset = (nbytes_names + nbytes_bools) % 2 != 0 ? 1 : 0;
 
-    const int pos_str_offsets =
-        nbytes_header  // header (12 bytes)
-        + nbytes_names // length of names section
-        + nbytes_bools // length of boolean section
-        + align_offset +
-        (num_ints * bytes_per_int); // length of numbers section
+  const int pos_str_offsets =
+      nbytes_header                                // header (12 bytes)
+      + nbytes_names                               // length of names section
+      + nbytes_bools                               // length of boolean section
+      + align_offset + (num_ints * bytes_per_int); // length of numbers section
 
-    const int pos_str_table =
-        pos_str_offsets +
-        (num_offsets * sizeof(int16_t)); // length of string offsets table
+  const int pos_str_table =
+      pos_str_offsets +
+      (num_offsets * sizeof(int16_t)); // length of string offsets table
 
-    // Load caps
-    int i;
-    for (i = 0; i < TB_CAP__COUNT; i++) {
-        const char *cap = get_terminfo_string(pos_str_offsets, num_offsets,
-            pos_str_table, nbytes_strings, terminfo_cap_indexes[i]);
-        if (!cap) {
-            // Something is not right
-            return TB_ERR;
-        }
-        global.caps[i] = cap;
+  // Load caps
+  int i;
+  for (i = 0; i < TB_CAP__COUNT; i++) {
+    const char *cap = get_terminfo_string(pos_str_offsets, num_offsets,
+        pos_str_table, nbytes_strings, terminfo_cap_indexes[i]);
+    if (!cap) {
+      // Something is not right
+      return TB_ERR;
     }
+    global.caps[i] = cap;
+  }
 
-    return TB_OK;
+  return TB_OK;
 }
 
 static int load_builtin_caps(void) {
-    int i, j;
-    const char *term = getenv("TERM");
+  int i, j;
+  const char *term = getenv("TERM");
 
-    if (!term) return TB_ERR_NO_TERM;
+  if (!term) return TB_ERR_NO_TERM;
 
-    // Check for exact TERM match
-    for (i = 0; builtin_terms[i].name != NULL; i++) {
-        if (strcmp(term, builtin_terms[i].name) == 0) {
-            for (j = 0; j < TB_CAP__COUNT; j++) {
-                global.caps[j] = builtin_terms[i].caps[j];
-            }
-            return TB_OK;
-        }
+  // Check for exact TERM match
+  for (i = 0; builtin_terms[i].name != NULL; i++) {
+    if (strcmp(term, builtin_terms[i].name) == 0) {
+      for (j = 0; j < TB_CAP__COUNT; j++) {
+        global.caps[j] = builtin_terms[i].caps[j];
+      }
+      return TB_OK;
     }
+  }
 
-    // Check for partial TERM or alias match
-    for (i = 0; builtin_terms[i].name != NULL; i++) {
-        if (strstr(term, builtin_terms[i].name) != NULL ||
-            (*(builtin_terms[i].alias) != '\0' &&
-                strstr(term, builtin_terms[i].alias) != NULL))
-        {
-            for (j = 0; j < TB_CAP__COUNT; j++) {
-                global.caps[j] = builtin_terms[i].caps[j];
-            }
-            return TB_OK;
-        }
+  // Check for partial TERM or alias match
+  for (i = 0; builtin_terms[i].name != NULL; i++) {
+    if (strstr(term, builtin_terms[i].name) != NULL ||
+        (*(builtin_terms[i].alias) != '\0' &&
+            strstr(term, builtin_terms[i].alias) != NULL))
+    {
+      for (j = 0; j < TB_CAP__COUNT; j++) {
+        global.caps[j] = builtin_terms[i].caps[j];
+      }
+      return TB_OK;
     }
+  }
 
-    return TB_ERR_UNSUPPORTED_TERM;
+  return TB_ERR_UNSUPPORTED_TERM;
 }
 
 static const char *get_terminfo_string(int16_t offsets_pos, int16_t offsets_len,
     int16_t table_pos, int16_t table_size, int16_t index) {
-    if (index >= offsets_len) {
-        // An index beyond the offset table indicates absent
-        // See `convert_strings` in tinfo `read_entry.c`
-        return "";
-    }
+  if (index >= offsets_len) {
+    // An index beyond the offset table indicates absent
+    // See `convert_strings` in tinfo `read_entry.c`
+    return "";
+  }
 
-    int16_t table_offset;
-    int table_offset_offset = (int)offsets_pos + (index * (int)sizeof(int16_t));
-    if (get_terminfo_int16(table_offset_offset, &table_offset) != TB_OK) {
-        // offset beyond end of terminfo entry
-        // Truncated/corrupt terminfo entry?
-        return NULL;
-    }
+  int16_t table_offset;
+  int table_offset_offset = (int)offsets_pos + (index * (int)sizeof(int16_t));
+  if (get_terminfo_int16(table_offset_offset, &table_offset) != TB_OK) {
+    // offset beyond end of terminfo entry
+    // Truncated/corrupt terminfo entry?
+    return NULL;
+  }
 
-    if (table_offset < 0 || table_offset >= table_size) {
-        // A negative offset indicates absent
-        // An offset beyond the string table indicates absent
-        // See `convert_strings` in tinfo `read_entry.c`
-        return "";
-    }
+  if (table_offset < 0 || table_offset >= table_size) {
+    // A negative offset indicates absent
+    // An offset beyond the string table indicates absent
+    // See `convert_strings` in tinfo `read_entry.c`
+    return "";
+  }
 
-    int str_offset = (int)table_pos + (int)table_offset;
-    if (str_offset >= (int)global.nterminfo) {
-        // string beyond end of terminfo entry
-        // Truncated/corrupt terminfo entry?
-        return NULL;
-    }
+  int str_offset = (int)table_pos + (int)table_offset;
+  if (str_offset >= (int)global.nterminfo) {
+    // string beyond end of terminfo entry
+    // Truncated/corrupt terminfo entry?
+    return NULL;
+  }
 
-    return (const char *)(global.terminfo + str_offset);
+  return (const char *)(global.terminfo + str_offset);
 }
 
 static int get_terminfo_int16(int offset, int16_t *val) {
-    if (offset < 0 || offset + sizeof(int16_t) > global.nterminfo) {
-        *val = -1;
-        return TB_ERR;
-    }
-    memcpy(val, global.terminfo + offset, sizeof(int16_t));
-    return TB_OK;
+  if (offset < 0 || offset + sizeof(int16_t) > global.nterminfo) {
+    *val = -1;
+    return TB_ERR;
+  }
+  memcpy(val, global.terminfo + offset, sizeof(int16_t));
+  return TB_OK;
 }
 
 static int wait_event(struct tb_event *event, int timeout) {
-    int rv;
-    char buf[TB_OPT_READ_BUF];
+  int rv;
+  char buf[TB_OPT_READ_BUF];
+
+  memset(event, 0, sizeof(*event));
+  if_ok_return(rv, extract_event(event));
+
+  fd_set fds;
+  struct timeval tv;
+  tv.tv_sec = timeout / 1000;
+  tv.tv_usec = (timeout - (tv.tv_sec * 1000)) * 1000;
+
+  do {
+    FD_ZERO(&fds);
+    FD_SET(global.rfd, &fds);
+    FD_SET(global.resize_pipefd[0], &fds);
+
+    int maxfd = global.resize_pipefd[0] > global.rfd ? global.resize_pipefd[0]
+                                                     : global.rfd;
+
+    int select_rv =
+        select(maxfd + 1, &fds, NULL, NULL, (timeout < 0) ? NULL : &tv);
+
+    if (select_rv < 0) {
+      // Let EINTR/EAGAIN bubble up
+      global.last_errno = errno;
+      return TB_ERR_POLL;
+    } else if (select_rv == 0) {
+      return TB_ERR_NO_EVENT;
+    }
+
+    int tty_has_events = (FD_ISSET(global.rfd, &fds));
+    int resize_has_events = (FD_ISSET(global.resize_pipefd[0], &fds));
+
+    if (tty_has_events) {
+      ssize_t read_rv = read(global.rfd, buf, sizeof(buf));
+      if (read_rv < 0) {
+        global.last_errno = errno;
+        return TB_ERR_READ;
+      } else if (read_rv > 0) {
+        bytebuf_nputs(&global.in, buf, read_rv);
+      }
+    }
+
+    if (resize_has_events) {
+      int ignore = 0;
+      read(global.resize_pipefd[0], &ignore, sizeof(ignore));
+      // TODO: Harden against errors encountered mid-resize
+      if_err_return(rv, update_term_size());
+      if_err_return(rv, resize_cellbufs());
+      event->type = TB_EVENT_RESIZE;
+      event->w = global.width;
+      event->h = global.height;
+      return TB_OK;
+    }
 
     memset(event, 0, sizeof(*event));
     if_ok_return(rv, extract_event(event));
+  } while (timeout == -1);
 
-    fd_set fds;
-    struct timeval tv;
-    tv.tv_sec = timeout / 1000;
-    tv.tv_usec = (timeout - (tv.tv_sec * 1000)) * 1000;
-
-    do {
-        FD_ZERO(&fds);
-        FD_SET(global.rfd, &fds);
-        FD_SET(global.resize_pipefd[0], &fds);
-
-        int maxfd = global.resize_pipefd[0] > global.rfd
-                        ? global.resize_pipefd[0]
-                        : global.rfd;
-
-        int select_rv =
-            select(maxfd + 1, &fds, NULL, NULL, (timeout < 0) ? NULL : &tv);
-
-        if (select_rv < 0) {
-            // Let EINTR/EAGAIN bubble up
-            global.last_errno = errno;
-            return TB_ERR_POLL;
-        } else if (select_rv == 0) {
-            return TB_ERR_NO_EVENT;
-        }
-
-        int tty_has_events = (FD_ISSET(global.rfd, &fds));
-        int resize_has_events = (FD_ISSET(global.resize_pipefd[0], &fds));
-
-        if (tty_has_events) {
-            ssize_t read_rv = read(global.rfd, buf, sizeof(buf));
-            if (read_rv < 0) {
-                global.last_errno = errno;
-                return TB_ERR_READ;
-            } else if (read_rv > 0) {
-                bytebuf_nputs(&global.in, buf, read_rv);
-            }
-        }
-
-        if (resize_has_events) {
-            int ignore = 0;
-            read(global.resize_pipefd[0], &ignore, sizeof(ignore));
-            // TODO: Harden against errors encountered mid-resize
-            if_err_return(rv, update_term_size());
-            if_err_return(rv, resize_cellbufs());
-            event->type = TB_EVENT_RESIZE;
-            event->w = global.width;
-            event->h = global.height;
-            return TB_OK;
-        }
-
-        memset(event, 0, sizeof(*event));
-        if_ok_return(rv, extract_event(event));
-    } while (timeout == -1);
-
-    return rv;
+  return rv;
 }
 
 static int extract_event(struct tb_event *event) {
-    int rv;
-    struct bytebuf *in = &global.in;
+  int rv;
+  struct bytebuf *in = &global.in;
 
-    if (in->len == 0) return TB_ERR;
+  if (in->len == 0) return TB_ERR;
 
-    if (in->buf[0] == '\x1b') {
-        // Escape sequence?
-        // In TB_INPUT_ESC, skip if the buffer is a single escape char
-        if (!((global.input_mode & TB_INPUT_ESC) && in->len == 1)) {
-            if_ok_or_need_more_return(rv, extract_esc(event));
-        }
-
-        // Escape key?
-        if (global.input_mode & TB_INPUT_ESC) {
-            event->type = TB_EVENT_KEY;
-            event->ch = 0;
-            event->key = TB_KEY_ESC;
-            event->mod = 0;
-            bytebuf_shift(in, 1);
-            return TB_OK;
-        }
-
-        // Recurse for alt key
-        event->mod |= TB_MOD_ALT;
-        bytebuf_shift(in, 1);
-        return extract_event(event);
+  if (in->buf[0] == '\x1b') {
+    // Escape sequence?
+    // In TB_INPUT_ESC, skip if the buffer is a single escape char
+    if (!((global.input_mode & TB_INPUT_ESC) && in->len == 1)) {
+      if_ok_or_need_more_return(rv, extract_esc(event));
     }
 
-    // ASCII control key?
-    int is_ctrl =
-        (uint16_t)in->buf[0] < TB_KEY_SPACE || in->buf[0] == TB_KEY_BACKSPACE2;
-    if (is_ctrl) {
-        event->type = TB_EVENT_KEY;
-        event->ch = 0;
-        event->key = (uint16_t)in->buf[0];
-        event->mod |= TB_MOD_CTRL;
-        bytebuf_shift(in, 1);
-        return TB_OK;
+    // Escape key?
+    if (global.input_mode & TB_INPUT_ESC) {
+      event->type = TB_EVENT_KEY;
+      event->ch = 0;
+      event->key = TB_KEY_ESC;
+      event->mod = 0;
+      bytebuf_shift(in, 1);
+      return TB_OK;
     }
 
-    // UTF-8?
-    if (in->len >= (size_t)tb_utf8_char_length(in->buf[0])) {
-        event->type = TB_EVENT_KEY;
-        tb_utf8_char_to_unicode(&event->ch, in->buf);
-        event->key = 0;
-        bytebuf_shift(in, tb_utf8_char_length(in->buf[0]));
-        return TB_OK;
-    }
+    // Recurse for alt key
+    event->mod |= TB_MOD_ALT;
+    bytebuf_shift(in, 1);
+    return extract_event(event);
+  }
 
-    // Need more input
-    return TB_ERR;
+  // ASCII control key?
+  int is_ctrl =
+      (uint16_t)in->buf[0] < TB_KEY_SPACE || in->buf[0] == TB_KEY_BACKSPACE2;
+  if (is_ctrl) {
+    event->type = TB_EVENT_KEY;
+    event->ch = 0;
+    event->key = (uint16_t)in->buf[0];
+    event->mod |= TB_MOD_CTRL;
+    bytebuf_shift(in, 1);
+    return TB_OK;
+  }
+
+  // UTF-8?
+  if (in->len >= (size_t)tb_utf8_char_length(in->buf[0])) {
+    event->type = TB_EVENT_KEY;
+    tb_utf8_char_to_unicode(&event->ch, in->buf);
+    event->key = 0;
+    bytebuf_shift(in, tb_utf8_char_length(in->buf[0]));
+    return TB_OK;
+  }
+
+  // Need more input
+  return TB_ERR;
 }
 
 static int extract_esc(struct tb_event *event) {
-    int rv;
-    if_ok_or_need_more_return(rv, extract_esc_user(event, 0));
-    if_ok_or_need_more_return(rv, extract_esc_cap(event));
-    if_ok_or_need_more_return(rv, extract_esc_mouse(event));
-    if_ok_or_need_more_return(rv, extract_esc_user(event, 1));
-    return TB_ERR;
+  int rv;
+  if_ok_or_need_more_return(rv, extract_esc_user(event, 0));
+  if_ok_or_need_more_return(rv, extract_esc_cap(event));
+  if_ok_or_need_more_return(rv, extract_esc_mouse(event));
+  if_ok_or_need_more_return(rv, extract_esc_user(event, 1));
+  return TB_ERR;
 }
 
 static int extract_esc_user(struct tb_event *event, int is_post) {
-    int rv;
-    size_t consumed = 0;
-    struct bytebuf *in = &global.in;
-    int (*fn)(struct tb_event *, size_t *);
+  int rv;
+  size_t consumed = 0;
+  struct bytebuf *in = &global.in;
+  int (*fn)(struct tb_event *, size_t *);
 
-    fn = is_post ? global.fn_extract_esc_post : global.fn_extract_esc_pre;
+  fn = is_post ? global.fn_extract_esc_post : global.fn_extract_esc_pre;
 
-    if (!fn) return TB_ERR;
+  if (!fn) return TB_ERR;
 
-    rv = fn(event, &consumed);
-    if (rv == TB_OK) bytebuf_shift(in, consumed);
+  rv = fn(event, &consumed);
+  if (rv == TB_OK) bytebuf_shift(in, consumed);
 
-    if_ok_or_need_more_return(rv, rv);
-    return TB_ERR;
+  if_ok_or_need_more_return(rv, rv);
+  return TB_ERR;
 }
 
 static int extract_esc_cap(struct tb_event *event) {
-    int rv;
-    struct bytebuf *in = &global.in;
-    struct cap_trie *node;
-    size_t depth;
+  int rv;
+  struct bytebuf *in = &global.in;
+  struct cap_trie *node;
+  size_t depth;
 
-    if_err_return(rv, cap_trie_find(in->buf, in->len, &node, &depth));
-    if (node->is_leaf) {
-        // Found a leaf node
-        event->type = TB_EVENT_KEY;
-        event->ch = 0;
-        event->key = node->key;
-        event->mod = node->mod;
-        bytebuf_shift(in, depth);
-        return TB_OK;
-    } else if (node->nchildren > 0 && in->len <= depth) {
-        // Found a branch node (not enough input)
-        return TB_ERR_NEED_MORE;
-    }
+  if_err_return(rv, cap_trie_find(in->buf, in->len, &node, &depth));
+  if (node->is_leaf) {
+    // Found a leaf node
+    event->type = TB_EVENT_KEY;
+    event->ch = 0;
+    event->key = node->key;
+    event->mod = node->mod;
+    bytebuf_shift(in, depth);
+    return TB_OK;
+  } else if (node->nchildren > 0 && in->len <= depth) {
+    // Found a branch node (not enough input)
+    return TB_ERR_NEED_MORE;
+  }
 
-    return TB_ERR;
+  return TB_ERR;
 }
 
 static int extract_esc_mouse(struct tb_event *event) {
-    struct bytebuf *in = &global.in;
-    size_t buf_shift = 0;
+  struct bytebuf *in = &global.in;
+  size_t buf_shift = 0;
 
-    // Bail if not enough to determine type
-    if (in->len < 2) {
-        return TB_ERR_NEED_MORE;
-    } else if (in->buf[1] != '[') {
-        return TB_ERR;
-    } else if (in->len < 3) {
-        return TB_ERR_NEED_MORE;
+  // Bail if not enough to determine type
+  if (in->len < 2) {
+    return TB_ERR_NEED_MORE;
+  } else if (in->buf[1] != '[') {
+    return TB_ERR;
+  } else if (in->len < 3) {
+    return TB_ERR_NEED_MORE;
+  }
+
+  // Discern type of mouse event from 3rd byte
+  int type = 0;
+  enum { TYPE_VT200 = 0, TYPE_1006, TYPE_1015, TYPE_MAX };
+  if (in->buf[2] == 'M') {
+    // X10 mouse encoding, the simplest one
+    // \x1b [ M Cb Cx Cy
+    type = TYPE_VT200;
+  } else if (in->buf[2] == '<') {
+    // xterm 1006 extended mode or urxvt 1015 extended mode
+    // xterm: \x1b [ < Cb ; Cx ; Cy (M or m)
+    type = TYPE_1006;
+  } else {
+    // urxvt: \x1b [ Cb ; Cx ; Cy M
+    type = TYPE_1015;
+  }
+
+  switch (type) {
+    case TYPE_VT200: {
+      // In this mode, we need 6 bytes
+      if (in->len < 6) return TB_ERR_NEED_MORE;
+
+      int b = in->buf[3] - 0x20;
+
+      switch (b & 3) {
+        case 0:
+          event->key =
+              ((b & 64) != 0) ? TB_KEY_MOUSE_WHEEL_UP : TB_KEY_MOUSE_LEFT;
+          break;
+        case 1:
+          event->key =
+              ((b & 64) != 0) ? TB_KEY_MOUSE_WHEEL_DOWN : TB_KEY_MOUSE_MIDDLE;
+          break;
+        case 2:
+          event->key = TB_KEY_MOUSE_RIGHT;
+          break;
+        case 3:
+          event->key = TB_KEY_MOUSE_RELEASE;
+          break;
+        default:
+          return TB_ERR;
+      }
+
+      if ((b & 32) != 0) event->mod |= TB_MOD_MOTION;
+
+      // the coord is 1,1 for upper left
+      event->x = ((uint8_t)in->buf[4]) - 0x21;
+      event->y = ((uint8_t)in->buf[5]) - 0x21;
+
+      // Eat 6 bytes
+      buf_shift = 6;
+      break;
     }
 
-    // Discern type of mouse event from 3rd byte
-    int type = 0;
-    enum { TYPE_VT200 = 0, TYPE_1006, TYPE_1015, TYPE_MAX };
-    if (in->buf[2] == 'M') {
-        // X10 mouse encoding, the simplest one
-        // \x1b [ M Cb Cx Cy
-        type = TYPE_VT200;
-    } else if (in->buf[2] == '<') {
-        // xterm 1006 extended mode or urxvt 1015 extended mode
-        // xterm: \x1b [ < Cb ; Cx ; Cy (M or m)
-        type = TYPE_1006;
-    } else {
-        // urxvt: \x1b [ Cb ; Cx ; Cy M
-        type = TYPE_1015;
-    }
+    case TYPE_1006:
+      // fallthrough
 
-    switch (type) {
-        case TYPE_VT200: {
-            // In this mode, we need 6 bytes
-            if (in->len < 6) return TB_ERR_NEED_MORE;
+    case TYPE_1015: {
+      int num[3] = {-1, -1, -1};
+      int num_i = 0;
+      int cur_num = -1;
+      char trail = ' ';
 
-            int b = in->buf[3] - 0x20;
+      size_t i = 2;
+      if (type == TYPE_1006) ++i; // skip '<'
 
-            switch (b & 3) {
-                case 0:
-                    event->key = ((b & 64) != 0) ? TB_KEY_MOUSE_WHEEL_UP
-                                                 : TB_KEY_MOUSE_LEFT;
-                    break;
-                case 1:
-                    event->key = ((b & 64) != 0) ? TB_KEY_MOUSE_WHEEL_DOWN
-                                                 : TB_KEY_MOUSE_MIDDLE;
-                    break;
-                case 2:
-                    event->key = TB_KEY_MOUSE_RIGHT;
-                    break;
-                case 3:
-                    event->key = TB_KEY_MOUSE_RELEASE;
-                    break;
-                default:
-                    return TB_ERR;
-            }
-
-            if ((b & 32) != 0) event->mod |= TB_MOD_MOTION;
-
-            // the coord is 1,1 for upper left
-            event->x = ((uint8_t)in->buf[4]) - 0x21;
-            event->y = ((uint8_t)in->buf[5]) - 0x21;
-
-            // Eat 6 bytes
-            buf_shift = 6;
-            break;
+      // Parse %d;%d;%d[mM] into `num`
+      while (i < in->len && num_i < 3) {
+        char c = in->buf[i];
+        if (c >= '0' && c <= '9') {
+          // Digit
+          if (cur_num == -1) cur_num = 0;
+          cur_num *= 10;
+          cur_num += (int)(c - '0');
+        } else if (cur_num != -1 && ((num_i < 2 && c == ';') ||
+                                        (num_i == 2 && (c == 'm' || c == 'M'))))
+        {
+          // We're at a semi-colon, 'm', or 'M'
+          // and we have a number
+          num[num_i] = cur_num;
+          ++num_i;
+          cur_num = -1;
+          trail = c;
+        } else {
+          // Something else; not a mouse event
+          return TB_ERR;
         }
+        ++i;
+      }
 
-        case TYPE_1006:
-            // fallthrough
+      // If we didn't get to the 3rd number, we need more
+      if (num[2] == -1) return TB_ERR_NEED_MORE;
 
-        case TYPE_1015: {
-            int num[3] = {-1, -1, -1};
-            int num_i = 0;
-            int cur_num = -1;
-            char trail = ' ';
+      // We have a valid mouse event, eat `i` bytes from the buffer
+      buf_shift = i;
 
-            size_t i = 2;
-            if (type == TYPE_1006) ++i; // skip '<'
+      if (type == TYPE_1015) num[0] -= 0x20;
 
-            // Parse %d;%d;%d[mM] into `num`
-            while (i < in->len && num_i < 3) {
-                char c = in->buf[i];
-                if (c >= '0' && c <= '9') {
-                    // Digit
-                    if (cur_num == -1) cur_num = 0;
-                    cur_num *= 10;
-                    cur_num += (int)(c - '0');
-                } else if (cur_num != -1 &&
-                           ((num_i < 2 && c == ';') ||
-                               (num_i == 2 && (c == 'm' || c == 'M'))))
-                {
-                    // We're at a semi-colon, 'm', or 'M'
-                    // and we have a number
-                    num[num_i] = cur_num;
-                    ++num_i;
-                    cur_num = -1;
-                    trail = c;
-                } else {
-                    // Something else; not a mouse event
-                    return TB_ERR;
-                }
-                ++i;
-            }
+      switch (num[0] & 3) {
+        case 0:
+          event->key =
+              ((num[0] & 64) != 0) ? TB_KEY_MOUSE_WHEEL_UP : TB_KEY_MOUSE_LEFT;
+          break;
+        case 1:
+          event->key = ((num[0] & 64) != 0) ? TB_KEY_MOUSE_WHEEL_DOWN
+                                            : TB_KEY_MOUSE_MIDDLE;
+          break;
+        case 2:
+          event->key = TB_KEY_MOUSE_RIGHT;
+          break;
+        case 3:
+          event->key = TB_KEY_MOUSE_RELEASE;
+          break;
+        default:
+          return TB_ERR;
+      }
 
-            // If we didn't get to the 3rd number, we need more
-            if (num[2] == -1) return TB_ERR_NEED_MORE;
+      // on xterm mouse release is signaled by lowercase m
+      if (trail == 'm') event->key = TB_KEY_MOUSE_RELEASE;
 
-            // We have a valid mouse event, eat `i` bytes from the buffer
-            buf_shift = i;
+      if ((num[0] & 32) != 0) event->mod |= TB_MOD_MOTION;
 
-            if (type == TYPE_1015) num[0] -= 0x20;
+      event->x = (num[1] - 1 < 0) ? 0 : num[1] - 1;
+      event->y = (num[2] - 1 < 0) ? 0 : num[2] - 1;
 
-            switch (num[0] & 3) {
-                case 0:
-                    event->key = ((num[0] & 64) != 0) ? TB_KEY_MOUSE_WHEEL_UP
-                                                      : TB_KEY_MOUSE_LEFT;
-                    break;
-                case 1:
-                    event->key = ((num[0] & 64) != 0) ? TB_KEY_MOUSE_WHEEL_DOWN
-                                                      : TB_KEY_MOUSE_MIDDLE;
-                    break;
-                case 2:
-                    event->key = TB_KEY_MOUSE_RIGHT;
-                    break;
-                case 3:
-                    event->key = TB_KEY_MOUSE_RELEASE;
-                    break;
-                default:
-                    return TB_ERR;
-            }
-
-            // on xterm mouse release is signaled by lowercase m
-            if (trail == 'm') event->key = TB_KEY_MOUSE_RELEASE;
-
-            if ((num[0] & 32) != 0) event->mod |= TB_MOD_MOTION;
-
-            event->x = (num[1] - 1 < 0) ? 0 : num[1] - 1;
-            event->y = (num[2] - 1 < 0) ? 0 : num[2] - 1;
-
-            break;
-        }
+      break;
     }
+  }
 
-    if (buf_shift > 0) bytebuf_shift(in, buf_shift);
+  if (buf_shift > 0) bytebuf_shift(in, buf_shift);
 
-    event->type = TB_EVENT_MOUSE;
+  event->type = TB_EVENT_MOUSE;
 
-    return TB_OK;
+  return TB_OK;
 }
 
 static int resize_cellbufs(void) {
-    int rv;
-    if_err_return(rv,
-        cellbuf_resize(&global.back, global.width, global.height));
-    if_err_return(rv,
-        cellbuf_resize(&global.front, global.width, global.height));
-    if_err_return(rv, cellbuf_clear(&global.front));
-    if_err_return(rv, send_clear());
-    return TB_OK;
+  int rv;
+  if_err_return(rv, cellbuf_resize(&global.back, global.width, global.height));
+  if_err_return(rv, cellbuf_resize(&global.front, global.width, global.height));
+  if_err_return(rv, cellbuf_clear(&global.front));
+  if_err_return(rv, send_clear());
+  return TB_OK;
 }
 
 static void handle_resize(int sig) {
-    int errno_copy = errno;
-    write(global.resize_pipefd[1], &sig, sizeof(sig));
-    errno = errno_copy;
+  int errno_copy = errno;
+  write(global.resize_pipefd[1], &sig, sizeof(sig));
+  errno = errno_copy;
 }
 
 static int send_attr(uintattr_t fg, uintattr_t bg) {
-    int rv;
+  int rv;
 
-    if (fg == global.last_fg && bg == global.last_bg) {
-        return TB_OK;
-    }
+  if (fg == global.last_fg && bg == global.last_bg) { return TB_OK; }
 
-    if_err_return(rv, bytebuf_puts(&global.out, global.caps[TB_CAP_SGR0]));
+  if_err_return(rv, bytebuf_puts(&global.out, global.caps[TB_CAP_SGR0]));
 
-    uint32_t cfg, cbg;
-    switch (global.output_mode) {
-        default:
-        case TB_OUTPUT_NORMAL:
-            // The minus 1 below is because our colors are 1-indexed starting
-            // from black. Black is represented by a 30, 40, 90, or 100 for fg,
-            // bg, bright fg, or bright bg respectively. Red is 31, 41, 91,
-            // 101, etc.
-            cfg = (fg & TB_BRIGHT ? 90 : 30) + (fg & 0x0f) - 1;
-            cbg = (bg & TB_BRIGHT ? 100 : 40) + (bg & 0x0f) - 1;
-            break;
+  uint32_t cfg, cbg;
+  switch (global.output_mode) {
+    default:
+    case TB_OUTPUT_NORMAL:
+      // The minus 1 below is because our colors are 1-indexed starting
+      // from black. Black is represented by a 30, 40, 90, or 100 for fg,
+      // bg, bright fg, or bright bg respectively. Red is 31, 41, 91,
+      // 101, etc.
+      cfg = (fg & TB_BRIGHT ? 90 : 30) + (fg & 0x0f) - 1;
+      cbg = (bg & TB_BRIGHT ? 100 : 40) + (bg & 0x0f) - 1;
+      break;
 
-        case TB_OUTPUT_256:
-            cfg = fg & 0xff;
-            cbg = bg & 0xff;
-            if (fg & TB_HI_BLACK) cfg = 0;
-            if (bg & TB_HI_BLACK) cbg = 0;
-            break;
+    case TB_OUTPUT_256:
+      cfg = fg & 0xff;
+      cbg = bg & 0xff;
+      if (fg & TB_HI_BLACK) cfg = 0;
+      if (bg & TB_HI_BLACK) cbg = 0;
+      break;
 
-        case TB_OUTPUT_216:
-            cfg = fg & 0xff;
-            cbg = bg & 0xff;
-            if (cfg > 216) cfg = 216;
-            if (cbg > 216) cbg = 216;
-            cfg += 0x0f;
-            cbg += 0x0f;
-            break;
+    case TB_OUTPUT_216:
+      cfg = fg & 0xff;
+      cbg = bg & 0xff;
+      if (cfg > 216) cfg = 216;
+      if (cbg > 216) cbg = 216;
+      cfg += 0x0f;
+      cbg += 0x0f;
+      break;
 
-        case TB_OUTPUT_GRAYSCALE:
-            cfg = fg & 0xff;
-            cbg = bg & 0xff;
-            if (cfg > 24) cfg = 24;
-            if (cbg > 24) cbg = 24;
-            cfg += 0xe7;
-            cbg += 0xe7;
-            break;
+    case TB_OUTPUT_GRAYSCALE:
+      cfg = fg & 0xff;
+      cbg = bg & 0xff;
+      if (cfg > 24) cfg = 24;
+      if (cbg > 24) cbg = 24;
+      cfg += 0xe7;
+      cbg += 0xe7;
+      break;
 
 #if TB_OPT_ATTR_W >= 32
-        case TB_OUTPUT_TRUECOLOR:
-            cfg = fg & 0xffffff;
-            cbg = bg & 0xffffff;
-            if (fg & TB_HI_BLACK) cfg = 0;
-            if (bg & TB_HI_BLACK) cbg = 0;
-            break;
+    case TB_OUTPUT_TRUECOLOR:
+      cfg = fg & 0xffffff;
+      cbg = bg & 0xffffff;
+      if (fg & TB_HI_BLACK) cfg = 0;
+      if (bg & TB_HI_BLACK) cbg = 0;
+      break;
 #endif
-    }
+  }
 
-    if (fg & TB_BOLD)
-        if_err_return(rv, bytebuf_puts(&global.out, global.caps[TB_CAP_BOLD]));
+  if (fg & TB_BOLD)
+    if_err_return(rv, bytebuf_puts(&global.out, global.caps[TB_CAP_BOLD]));
 
-    if (fg & TB_BLINK)
-        if_err_return(rv, bytebuf_puts(&global.out, global.caps[TB_CAP_BLINK]));
+  if (fg & TB_BLINK)
+    if_err_return(rv, bytebuf_puts(&global.out, global.caps[TB_CAP_BLINK]));
 
-    if (fg & TB_UNDERLINE)
-        if_err_return(rv,
-            bytebuf_puts(&global.out, global.caps[TB_CAP_UNDERLINE]));
+  if (fg & TB_UNDERLINE)
+    if_err_return(rv, bytebuf_puts(&global.out, global.caps[TB_CAP_UNDERLINE]));
 
-    if (fg & TB_ITALIC)
-        if_err_return(rv,
-            bytebuf_puts(&global.out, global.caps[TB_CAP_ITALIC]));
+  if (fg & TB_ITALIC)
+    if_err_return(rv, bytebuf_puts(&global.out, global.caps[TB_CAP_ITALIC]));
 
-    if (fg & TB_DIM)
-        if_err_return(rv, bytebuf_puts(&global.out, global.caps[TB_CAP_DIM]));
+  if (fg & TB_DIM)
+    if_err_return(rv, bytebuf_puts(&global.out, global.caps[TB_CAP_DIM]));
 
 #if TB_OPT_ATTR_W == 64
-    if (fg & TB_STRIKEOUT)
-        if_err_return(rv, bytebuf_puts(&global.out, TB_HARDCAP_STRIKEOUT));
+  if (fg & TB_STRIKEOUT)
+    if_err_return(rv, bytebuf_puts(&global.out, TB_HARDCAP_STRIKEOUT));
 
-    if (fg & TB_UNDERLINE_2)
-        if_err_return(rv, bytebuf_puts(&global.out, TB_HARDCAP_UNDERLINE_2));
+  if (fg & TB_UNDERLINE_2)
+    if_err_return(rv, bytebuf_puts(&global.out, TB_HARDCAP_UNDERLINE_2));
 
-    if (fg & TB_OVERLINE)
-        if_err_return(rv, bytebuf_puts(&global.out, TB_HARDCAP_OVERLINE));
+  if (fg & TB_OVERLINE)
+    if_err_return(rv, bytebuf_puts(&global.out, TB_HARDCAP_OVERLINE));
 
-    if (fg & TB_INVISIBLE)
-        if_err_return(rv,
-            bytebuf_puts(&global.out, global.caps[TB_CAP_INVISIBLE]));
+  if (fg & TB_INVISIBLE)
+    if_err_return(rv, bytebuf_puts(&global.out, global.caps[TB_CAP_INVISIBLE]));
 #endif
 
-    if ((fg & TB_REVERSE) || (bg & TB_REVERSE))
-        if_err_return(rv,
-            bytebuf_puts(&global.out, global.caps[TB_CAP_REVERSE]));
+  if ((fg & TB_REVERSE) || (bg & TB_REVERSE))
+    if_err_return(rv, bytebuf_puts(&global.out, global.caps[TB_CAP_REVERSE]));
 
-    int fg_is_default = (fg & 0xff) == 0;
-    int bg_is_default = (bg & 0xff) == 0;
-    if (global.output_mode == TB_OUTPUT_256) {
-        if (fg & TB_HI_BLACK) fg_is_default = 0;
-        if (bg & TB_HI_BLACK) bg_is_default = 0;
-    }
+  int fg_is_default = (fg & 0xff) == 0;
+  int bg_is_default = (bg & 0xff) == 0;
+  if (global.output_mode == TB_OUTPUT_256) {
+    if (fg & TB_HI_BLACK) fg_is_default = 0;
+    if (bg & TB_HI_BLACK) bg_is_default = 0;
+  }
 #if TB_OPT_ATTR_W >= 32
-    if (global.output_mode == TB_OUTPUT_TRUECOLOR) {
-        fg_is_default = ((fg & 0xffffff) == 0) && ((fg & TB_HI_BLACK) == 0);
-        bg_is_default = ((bg & 0xffffff) == 0) && ((bg & TB_HI_BLACK) == 0);
-    }
+  if (global.output_mode == TB_OUTPUT_TRUECOLOR) {
+    fg_is_default = ((fg & 0xffffff) == 0) && ((fg & TB_HI_BLACK) == 0);
+    bg_is_default = ((bg & 0xffffff) == 0) && ((bg & TB_HI_BLACK) == 0);
+  }
 #endif
 
-    if_err_return(rv, send_sgr(cfg, cbg, fg_is_default, bg_is_default));
+  if_err_return(rv, send_sgr(cfg, cbg, fg_is_default, bg_is_default));
 
-    global.last_fg = fg;
-    global.last_bg = bg;
+  global.last_fg = fg;
+  global.last_bg = bg;
 
-    return TB_OK;
+  return TB_OK;
 }
 
 static int send_sgr(uint32_t cfg, uint32_t cbg, int fg_is_default,
     int bg_is_default) {
-    int rv;
-    char nbuf[32];
+  int rv;
+  char nbuf[32];
 
-    if (fg_is_default && bg_is_default) {
-        return TB_OK;
-    }
+  if (fg_is_default && bg_is_default) { return TB_OK; }
 
-    switch (global.output_mode) {
-        default:
-        case TB_OUTPUT_NORMAL:
-            send_literal(rv, "\x1b[");
-            if (!fg_is_default) {
-                send_num(rv, nbuf, cfg);
-                if (!bg_is_default) {
-                    send_literal(rv, ";");
-                }
-            }
-            if (!bg_is_default) {
-                send_num(rv, nbuf, cbg);
-            }
-            send_literal(rv, "m");
-            break;
+  switch (global.output_mode) {
+    default:
+    case TB_OUTPUT_NORMAL:
+      send_literal(rv, "\x1b[");
+      if (!fg_is_default) {
+        send_num(rv, nbuf, cfg);
+        if (!bg_is_default) { send_literal(rv, ";"); }
+      }
+      if (!bg_is_default) { send_num(rv, nbuf, cbg); }
+      send_literal(rv, "m");
+      break;
 
-        case TB_OUTPUT_256:
-        case TB_OUTPUT_216:
-        case TB_OUTPUT_GRAYSCALE:
-            send_literal(rv, "\x1b[");
-            if (!fg_is_default) {
-                send_literal(rv, "38;5;");
-                send_num(rv, nbuf, cfg);
-                if (!bg_is_default) {
-                    send_literal(rv, ";");
-                }
-            }
-            if (!bg_is_default) {
-                send_literal(rv, "48;5;");
-                send_num(rv, nbuf, cbg);
-            }
-            send_literal(rv, "m");
-            break;
+    case TB_OUTPUT_256:
+    case TB_OUTPUT_216:
+    case TB_OUTPUT_GRAYSCALE:
+      send_literal(rv, "\x1b[");
+      if (!fg_is_default) {
+        send_literal(rv, "38;5;");
+        send_num(rv, nbuf, cfg);
+        if (!bg_is_default) { send_literal(rv, ";"); }
+      }
+      if (!bg_is_default) {
+        send_literal(rv, "48;5;");
+        send_num(rv, nbuf, cbg);
+      }
+      send_literal(rv, "m");
+      break;
 
 #if TB_OPT_ATTR_W >= 32
-        case TB_OUTPUT_TRUECOLOR:
-            send_literal(rv, "\x1b[");
-            if (!fg_is_default) {
-                send_literal(rv, "38;2;");
-                send_num(rv, nbuf, (cfg >> 16) & 0xff);
-                send_literal(rv, ";");
-                send_num(rv, nbuf, (cfg >> 8) & 0xff);
-                send_literal(rv, ";");
-                send_num(rv, nbuf, cfg & 0xff);
-                if (!bg_is_default) {
-                    send_literal(rv, ";");
-                }
-            }
-            if (!bg_is_default) {
-                send_literal(rv, "48;2;");
-                send_num(rv, nbuf, (cbg >> 16) & 0xff);
-                send_literal(rv, ";");
-                send_num(rv, nbuf, (cbg >> 8) & 0xff);
-                send_literal(rv, ";");
-                send_num(rv, nbuf, cbg & 0xff);
-            }
-            send_literal(rv, "m");
-            break;
+    case TB_OUTPUT_TRUECOLOR:
+      send_literal(rv, "\x1b[");
+      if (!fg_is_default) {
+        send_literal(rv, "38;2;");
+        send_num(rv, nbuf, (cfg >> 16) & 0xff);
+        send_literal(rv, ";");
+        send_num(rv, nbuf, (cfg >> 8) & 0xff);
+        send_literal(rv, ";");
+        send_num(rv, nbuf, cfg & 0xff);
+        if (!bg_is_default) { send_literal(rv, ";"); }
+      }
+      if (!bg_is_default) {
+        send_literal(rv, "48;2;");
+        send_num(rv, nbuf, (cbg >> 16) & 0xff);
+        send_literal(rv, ";");
+        send_num(rv, nbuf, (cbg >> 8) & 0xff);
+        send_literal(rv, ";");
+        send_num(rv, nbuf, cbg & 0xff);
+      }
+      send_literal(rv, "m");
+      break;
 #endif
-    }
-    return TB_OK;
+  }
+  return TB_OK;
 }
 
 static int send_cursor_if(int x, int y) {
-    int rv;
-    char nbuf[32];
-    if (x < 0 || y < 0) {
-        return TB_OK;
-    }
-    send_literal(rv, "\x1b[");
-    send_num(rv, nbuf, y + 1);
-    send_literal(rv, ";");
-    send_num(rv, nbuf, x + 1);
-    send_literal(rv, "H");
-    return TB_OK;
+  int rv;
+  char nbuf[32];
+  if (x < 0 || y < 0) { return TB_OK; }
+  send_literal(rv, "\x1b[");
+  send_num(rv, nbuf, y + 1);
+  send_literal(rv, ";");
+  send_num(rv, nbuf, x + 1);
+  send_literal(rv, "H");
+  return TB_OK;
 }
 
 static int send_char(int x, int y, uint32_t ch) {
-    return send_cluster(x, y, &ch, 1);
+  return send_cluster(x, y, &ch, 1);
 }
 
 static int send_cluster(int x, int y, uint32_t *ch, size_t nch) {
-    int rv;
-    char chu8[8];
+  int rv;
+  char chu8[8];
 
-    if (global.last_x != x - 1 || global.last_y != y) {
-        if_err_return(rv, send_cursor_if(x, y));
+  if (global.last_x != x - 1 || global.last_y != y) {
+    if_err_return(rv, send_cursor_if(x, y));
+  }
+  global.last_x = x;
+  global.last_y = y;
+
+  int i;
+  for (i = 0; i < (int)nch; i++) {
+    uint32_t ch32 = *(ch + i);
+    if (!tb_iswprint(ch32)) {
+      ch32 = 0xfffd; // replace non-printable codepoints with U+FFFD
     }
-    global.last_x = x;
-    global.last_y = y;
+    int chu8_len = tb_utf8_unicode_to_char(chu8, ch32);
+    if_err_return(rv, bytebuf_nputs(&global.out, chu8, (size_t)chu8_len));
+  }
 
-    int i;
-    for (i = 0; i < (int)nch; i++) {
-        uint32_t ch32 = *(ch + i);
-        if (!tb_iswprint(ch32)) {
-            ch32 = 0xfffd; // replace non-printable codepoints with U+FFFD
-        }
-        int chu8_len = tb_utf8_unicode_to_char(chu8, ch32);
-        if_err_return(rv, bytebuf_nputs(&global.out, chu8, (size_t)chu8_len));
-    }
-
-    return TB_OK;
+  return TB_OK;
 }
 
 static int convert_num(uint32_t num, char *buf) {
-    int i, l = 0;
-    char ch;
-    do {
-        buf[l++] = (char)('0' + (num % 10));
-        num /= 10;
-    } while (num);
-    for (i = 0; i < l / 2; i++) {
-        ch = buf[i];
-        buf[i] = buf[l - 1 - i];
-        buf[l - 1 - i] = ch;
-    }
-    return l;
+  int i, l = 0;
+  char ch;
+  do {
+    buf[l++] = (char)('0' + (num % 10));
+    num /= 10;
+  } while (num);
+  for (i = 0; i < l / 2; i++) {
+    ch = buf[i];
+    buf[i] = buf[l - 1 - i];
+    buf[l - 1 - i] = ch;
+  }
+  return l;
 }
 
 static int cell_cmp(struct tb_cell *a, struct tb_cell *b) {
-    if (a->ch != b->ch || a->fg != b->fg || a->bg != b->bg) {
-        return 1;
-    }
+  if (a->ch != b->ch || a->fg != b->fg || a->bg != b->bg) { return 1; }
 #ifdef TB_OPT_EGC
-    if (a->nech != b->nech) {
-        return 1;
-    } else if (a->nech > 0) { // a->nech == b->nech
-        return memcmp(a->ech, b->ech, a->nech);
-    }
+  if (a->nech != b->nech) {
+    return 1;
+  } else if (a->nech > 0) { // a->nech == b->nech
+    return memcmp(a->ech, b->ech, a->nech);
+  }
 #endif
-    return 0;
+  return 0;
 }
 
 static int cell_copy(struct tb_cell *dst, struct tb_cell *src) {
 #ifdef TB_OPT_EGC
-    if (src->nech > 0) {
-        return cell_set(dst, src->ech, src->nech, src->fg, src->bg);
-    }
+  if (src->nech > 0) {
+    return cell_set(dst, src->ech, src->nech, src->fg, src->bg);
+  }
 #endif
-    return cell_set(dst, &src->ch, 1, src->fg, src->bg);
+  return cell_set(dst, &src->ch, 1, src->fg, src->bg);
 }
 
 static int cell_set(struct tb_cell *cell, uint32_t *ch, size_t nch,
     uintattr_t fg, uintattr_t bg) {
-    // TODO: iswprint ch?
-    cell->ch = ch ? *ch : 0;
-    cell->fg = fg;
-    cell->bg = bg;
+  // TODO: iswprint ch?
+  cell->ch = ch ? *ch : 0;
+  cell->fg = fg;
+  cell->bg = bg;
 #ifdef TB_OPT_EGC
-    if (nch <= 1) {
-        cell->nech = 0;
-    } else {
-        int rv;
-        if_err_return(rv, cell_reserve_ech(cell, nch + 1));
-        memcpy(cell->ech, ch, sizeof(*ch) * nch);
-        cell->ech[nch] = '\0';
-        cell->nech = nch;
-    }
+  if (nch <= 1) {
+    cell->nech = 0;
+  } else {
+    int rv;
+    if_err_return(rv, cell_reserve_ech(cell, nch + 1));
+    memcpy(cell->ech, ch, sizeof(*ch) * nch);
+    cell->ech[nch] = '\0';
+    cell->nech = nch;
+  }
 #else
-    (void)nch;
-    (void)cell_reserve_ech;
+  (void)nch;
+  (void)cell_reserve_ech;
 #endif
-    return TB_OK;
+  return TB_OK;
 }
 
 static int cell_reserve_ech(struct tb_cell *cell, size_t n) {
 #ifdef TB_OPT_EGC
-    if (cell->cech >= n) return TB_OK;
-    cell->ech = (uint32_t *)tb_realloc(cell->ech, n * sizeof(cell->ch));
-    if (!cell->ech) return TB_ERR_MEM;
-    cell->cech = n;
-    return TB_OK;
+  if (cell->cech >= n) return TB_OK;
+  cell->ech = (uint32_t *)tb_realloc(cell->ech, n * sizeof(cell->ch));
+  if (!cell->ech) return TB_ERR_MEM;
+  cell->cech = n;
+  return TB_OK;
 #else
-    (void)cell;
-    (void)n;
-    return TB_ERR;
+  (void)cell;
+  (void)n;
+  return TB_ERR;
 #endif
 }
 
 static int cell_free(struct tb_cell *cell) {
 #ifdef TB_OPT_EGC
-    if (cell->ech) tb_free(cell->ech);
+  if (cell->ech) tb_free(cell->ech);
 #endif
-    memset(cell, 0, sizeof(*cell));
-    return TB_OK;
+  memset(cell, 0, sizeof(*cell));
+  return TB_OK;
 }
 
 static int cellbuf_init(struct cellbuf *c, int w, int h) {
-    c->cells = (struct tb_cell *)tb_malloc(sizeof(struct tb_cell) * w * h);
-    if (!c->cells) return TB_ERR_MEM;
-    memset(c->cells, 0, sizeof(struct tb_cell) * w * h);
-    c->width = w;
-    c->height = h;
-    return TB_OK;
+  c->cells = (struct tb_cell *)tb_malloc(sizeof(struct tb_cell) * w * h);
+  if (!c->cells) return TB_ERR_MEM;
+  memset(c->cells, 0, sizeof(struct tb_cell) * w * h);
+  c->width = w;
+  c->height = h;
+  return TB_OK;
 }
 
 static int cellbuf_free(struct cellbuf *c) {
-    if (c->cells) {
-        int i;
-        for (i = 0; i < c->width * c->height; i++) {
-            cell_free(&c->cells[i]);
-        }
-        tb_free(c->cells);
-    }
-    memset(c, 0, sizeof(*c));
-    return TB_OK;
+  if (c->cells) {
+    int i;
+    for (i = 0; i < c->width * c->height; i++) { cell_free(&c->cells[i]); }
+    tb_free(c->cells);
+  }
+  memset(c, 0, sizeof(*c));
+  return TB_OK;
 }
 
 static int cellbuf_clear(struct cellbuf *c) {
-    int rv, i;
-    uint32_t space = (uint32_t)' ';
-    for (i = 0; i < c->width * c->height; i++) {
-        if_err_return(rv,
-            cell_set(&c->cells[i], &space, 1, global.fg, global.bg));
-    }
-    return TB_OK;
+  int rv, i;
+  uint32_t space = (uint32_t)' ';
+  for (i = 0; i < c->width * c->height; i++) {
+    if_err_return(rv, cell_set(&c->cells[i], &space, 1, global.fg, global.bg));
+  }
+  return TB_OK;
 }
 
-static int cellbuf_get(struct cellbuf *c, int x, int y,
-    struct tb_cell **out) {
-    if (!cellbuf_in_bounds(c, x, y)) {
-        *out = NULL;
-        return TB_ERR_OUT_OF_BOUNDS;
-    }
-    *out = &c->cells[(y * c->width) + x];
-    return TB_OK;
+static int cellbuf_get(struct cellbuf *c, int x, int y, struct tb_cell **out) {
+  if (!cellbuf_in_bounds(c, x, y)) {
+    *out = NULL;
+    return TB_ERR_OUT_OF_BOUNDS;
+  }
+  *out = &c->cells[(y * c->width) + x];
+  return TB_OK;
 }
 
 static int cellbuf_in_bounds(struct cellbuf *c, int x, int y) {
-    if (x < 0 || x >= c->width || y < 0 || y >= c->height) {
-        return 0;
-    }
-    return 1;
+  if (x < 0 || x >= c->width || y < 0 || y >= c->height) { return 0; }
+  return 1;
 }
 
 static int cellbuf_resize(struct cellbuf *c, int w, int h) {
-    int rv;
+  int rv;
 
-    int ow = c->width;
-    int oh = c->height;
+  int ow = c->width;
+  int oh = c->height;
 
-    if (ow == w && oh == h) {
-        return TB_OK;
+  if (ow == w && oh == h) { return TB_OK; }
+
+  w = w < 1 ? 1 : w;
+  h = h < 1 ? 1 : h;
+
+  int minw = (w < ow) ? w : ow;
+  int minh = (h < oh) ? h : oh;
+
+  struct tb_cell *prev = c->cells;
+
+  if_err_return(rv, cellbuf_init(c, w, h));
+  if_err_return(rv, cellbuf_clear(c));
+
+  int x, y;
+  for (x = 0; x < minw; x++) {
+    for (y = 0; y < minh; y++) {
+      struct tb_cell *src, *dst;
+      src = &prev[(y * ow) + x];
+      if_err_return(rv, cellbuf_get(c, x, y, &dst));
+      if_err_return(rv, cell_copy(dst, src));
     }
+  }
 
-    w = w < 1 ? 1 : w;
-    h = h < 1 ? 1 : h;
+  tb_free(prev);
 
-    int minw = (w < ow) ? w : ow;
-    int minh = (h < oh) ? h : oh;
-
-    struct tb_cell *prev = c->cells;
-
-    if_err_return(rv, cellbuf_init(c, w, h));
-    if_err_return(rv, cellbuf_clear(c));
-
-    int x, y;
-    for (x = 0; x < minw; x++) {
-        for (y = 0; y < minh; y++) {
-            struct tb_cell *src, *dst;
-            src = &prev[(y * ow) + x];
-            if_err_return(rv, cellbuf_get(c, x, y, &dst));
-            if_err_return(rv, cell_copy(dst, src));
-        }
-    }
-
-    tb_free(prev);
-
-    return TB_OK;
+  return TB_OK;
 }
 
 static int bytebuf_puts(struct bytebuf *b, const char *str) {
-    if (!str || strlen(str) <= 0) return TB_OK; // Nothing to do for empty caps
-    return bytebuf_nputs(b, str, (size_t)strlen(str));
+  if (!str || strlen(str) <= 0) return TB_OK; // Nothing to do for empty caps
+  return bytebuf_nputs(b, str, (size_t)strlen(str));
 }
 
 static int bytebuf_nputs(struct bytebuf *b, const char *str, size_t nstr) {
-    int rv;
-    if_err_return(rv, bytebuf_reserve(b, b->len + nstr + 1));
-    memcpy(b->buf + b->len, str, nstr);
-    b->len += nstr;
-    b->buf[b->len] = '\0';
-    return TB_OK;
+  int rv;
+  if_err_return(rv, bytebuf_reserve(b, b->len + nstr + 1));
+  memcpy(b->buf + b->len, str, nstr);
+  b->len += nstr;
+  b->buf[b->len] = '\0';
+  return TB_OK;
 }
 
 static int bytebuf_shift(struct bytebuf *b, size_t n) {
-    if (n > b->len) n = b->len;
-    size_t nmove = b->len - n;
-    memmove(b->buf, b->buf + n, nmove);
-    b->len -= n;
-    return TB_OK;
+  if (n > b->len) n = b->len;
+  size_t nmove = b->len - n;
+  memmove(b->buf, b->buf + n, nmove);
+  b->len -= n;
+  return TB_OK;
 }
 
 static int bytebuf_flush(struct bytebuf *b, int fd) {
-    if (b->len <= 0) return TB_OK;
-    ssize_t write_rv = write(fd, b->buf, b->len);
-    if (write_rv < 0 || (size_t)write_rv != b->len) {
-        // Note, errno will be 0 on partial write
-        global.last_errno = errno;
-        return TB_ERR;
-    }
-    b->len = 0;
-    return TB_OK;
+  if (b->len <= 0) return TB_OK;
+  ssize_t write_rv = write(fd, b->buf, b->len);
+  if (write_rv < 0 || (size_t)write_rv != b->len) {
+    // Note, errno will be 0 on partial write
+    global.last_errno = errno;
+    return TB_ERR;
+  }
+  b->len = 0;
+  return TB_OK;
 }
 
 static int bytebuf_reserve(struct bytebuf *b, size_t sz) {
-    if (b->cap >= sz) return TB_OK;
+  if (b->cap >= sz) return TB_OK;
 
-    size_t newcap = b->cap > 0 ? b->cap : 1;
-    while (newcap < sz) {
-        newcap *= 2;
-    }
+  size_t newcap = b->cap > 0 ? b->cap : 1;
+  while (newcap < sz) { newcap *= 2; }
 
-    char *newbuf;
-    if (b->buf) {
-        newbuf = (char *)tb_realloc(b->buf, newcap);
-    } else {
-        newbuf = (char *)tb_malloc(newcap);
-    }
-    if (!newbuf) return TB_ERR_MEM;
+  char *newbuf;
+  if (b->buf) {
+    newbuf = (char *)tb_realloc(b->buf, newcap);
+  } else {
+    newbuf = (char *)tb_malloc(newcap);
+  }
+  if (!newbuf) return TB_ERR_MEM;
 
-    b->buf = newbuf;
-    b->cap = newcap;
-    return TB_OK;
+  b->buf = newbuf;
+  b->cap = newcap;
+  return TB_OK;
 }
 
 static int bytebuf_free(struct bytebuf *b) {
-    if (b->buf) tb_free(b->buf);
-    memset(b, 0, sizeof(*b));
-    return TB_OK;
+  if (b->buf) tb_free(b->buf);
+  memset(b, 0, sizeof(*b));
+  return TB_OK;
 }
 
 int tb_iswprint(uint32_t ch) {
 #ifdef TB_OPT_LIBC_WCHAR
-    return iswprint((wint_t)ch);
+  return iswprint((wint_t)ch);
 #else
-    return tb_iswprint_ex(ch, NULL);
+  return tb_iswprint_ex(ch, NULL);
 #endif
 }
 
 int tb_wcwidth(uint32_t ch) {
-    int w;
+  int w;
 #ifdef TB_OPT_LIBC_WCHAR
-    w = wcwidth((wchar_t)ch);
+  w = wcwidth((wchar_t)ch);
 #else
-    tb_iswprint_ex(ch, &w);
+  tb_iswprint_ex(ch, &w);
 #endif
-    return w;
+  return w;
 }
 
 static int tb_cluster_width(uint32_t *ch, size_t nch) {
-    int wmax = -1;
-    int vs15 = 0, vs16 = 0, ri = 0, zwj = 0;
-    size_t i = 0;
-    for (i = 0; i < nch; i++) {
-        uint32_t c = ch[i];
-        switch (c) {
-            case 0xfe0e: ++vs15; break;
-            case 0xfe0f: ++vs16; break;
-            case 0x200d: ++zwj; break;
-            default: if (c >= 0x1f1e6 && c <= 0x1f1ff) ++ri;
-        }
-        int w = tb_wcwidth(c);
-        if (w > wmax) wmax = w;
+  int wmax = -1;
+  int vs15 = 0, vs16 = 0, ri = 0, zwj = 0;
+  size_t i = 0;
+  for (i = 0; i < nch; i++) {
+    uint32_t c = ch[i];
+    switch (c) {
+      case 0xfe0e:
+        ++vs15;
+        break;
+      case 0xfe0f:
+        ++vs16;
+        break;
+      case 0x200d:
+        ++zwj;
+        break;
+      default:
+        if (c >= 0x1f1e6 && c <= 0x1f1ff) ++ri;
     }
-    if (wmax >= 1) {
-        if (vs15) return 1;
-        else if (vs16 || zwj || ri >= 2) return 2;
-    }
-    return wmax;
+    int w = tb_wcwidth(c);
+    if (w > wmax) wmax = w;
+  }
+  if (wmax >= 1) {
+    if (vs15)
+      return 1;
+    else if (vs16 || zwj || ri >= 2)
+      return 2;
+  }
+  return wmax;
 }
 
 static int tb_iswprint_ex(uint32_t ch, int *w) {
 #ifdef TB_OPT_LIBC_WCHAR
-    if (w) *w = wcwidth((wint_t)ch);
-    return iswprint(ch);
+  if (w) *w = wcwidth((wint_t)ch);
+  return iswprint(ch);
 #else
-    // Fast path for 1-byte codepoints
-    if ((ch >= 0x20 && ch <= 0x7e) || (ch >= 0xa0 && ch <= 0xff)) {
-        if (w) *w = 1;
-        return 1;
-    } else if (ch <= 0xff) {
-        if (w) *w = ch == 0 ? 0 : -1;
-        return 0;
-    }
-
-    int lo = 0, hi = WCWIDTH_TABLE_LENGTH - 1;
-    while (lo <= hi) {
-        int i = (lo + hi) / 2;
-        if (ch < wcwidth_table[i].range_start) {
-            hi = i - 1;
-        } else if (ch > wcwidth_table[i].range_end) {
-            lo = i + 1;
-        } else {
-            if (w) *w = wcwidth_table[i].width;
-            return wcwidth_table[i].width >= 0 ? 1 : 0;
-        }
-    }
-    if (w) *w = -1; // Invalid codepoint
+  // Fast path for 1-byte codepoints
+  if ((ch >= 0x20 && ch <= 0x7e) || (ch >= 0xa0 && ch <= 0xff)) {
+    if (w) *w = 1;
+    return 1;
+  } else if (ch <= 0xff) {
+    if (w) *w = ch == 0 ? 0 : -1;
     return 0;
+  }
+
+  int lo = 0, hi = WCWIDTH_TABLE_LENGTH - 1;
+  while (lo <= hi) {
+    int i = (lo + hi) / 2;
+    if (ch < wcwidth_table[i].range_start) {
+      hi = i - 1;
+    } else if (ch > wcwidth_table[i].range_end) {
+      lo = i + 1;
+    } else {
+      if (w) *w = wcwidth_table[i].width;
+      return wcwidth_table[i].width >= 0 ? 1 : 0;
+    }
+  }
+  if (w) *w = -1; // Invalid codepoint
+  return 0;
 #endif
 }
 
