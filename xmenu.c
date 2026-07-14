@@ -17,6 +17,8 @@ int main() {
 
   char buf[MAX_BUF + 1] = {0};
   int len = 0;
+  int selected = 0;
+  char **inputs = get_inputs();
 
   while (1) {
     tb_clear();
@@ -27,13 +29,15 @@ int main() {
       tb_set_cell(i, 0, buf[i], TB_BLUE | TB_BOLD, TB_DEFAULT);
 
     int x = MAX_BUF + 1;
-    char **inputs = get_inputs();
     for (int i = 0; inputs[i] != NULL; i++) { // prints std inputs
       if (i > 0) {
         tb_printf(x, 0, TB_BLACK, TB_WHITE, "|");
         x += 1;
       }
-      tb_printf(x, 0, TB_BLACK, TB_WHITE, " %s ", inputs[i]);
+      if (i == selected)
+        tb_printf(x, 0, TB_BLACK, TB_RED, " %s ", inputs[i]);
+      else
+        tb_printf(x, 0, TB_BLACK, TB_WHITE, " %s ", inputs[i]);
       x += strlen(inputs[i]) + 2;
     }
     tb_set_cursor(len, 0);
@@ -44,6 +48,10 @@ int main() {
 
     if (ev.type == TB_EVENT_KEY) {
       if (ev.key == TB_KEY_ESC || ev.key == TB_KEY_ENTER) break;
+      if (ev.key == TB_KEY_ARROW_LEFT && selected > 0)
+        selected--;
+      else if (ev.key == TB_KEY_ARROW_RIGHT && inputs[selected + 1] != NULL)
+        selected++;
       if (ev.key == TB_KEY_BACKSPACE || ev.key == TB_KEY_BACKSPACE2 ||
           ev.key == TB_KEY_CTRL_H)
       {
@@ -56,6 +64,7 @@ int main() {
   }
 
   tb_shutdown();
-  printf("print: %s\n", buf);
+  printf("input: %s\n", buf);
+  printf("selected: %s\n", inputs[selected]);
   return EXIT_SUCCESS;
 }
