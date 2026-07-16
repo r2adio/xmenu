@@ -9,7 +9,7 @@
 #define MAX_BUF          30
 #define INITIAL_CAPACITY 16
 
-char **get_inputs() {
+char **get_inputs(size_t *out_count) {
   char **opts = NULL;
   size_t cap = INITIAL_CAPACITY;
   size_t count = 0;
@@ -19,7 +19,6 @@ char **get_inputs() {
   char *line = NULL;
   size_t len = 0;
   ssize_t read;
-  // read stdin until eof
   while ((read = getline(&line, &len, stdin)) != -1) {
     if (read > 0 && line[read - 1] == '\n') line[read - 1] = '\0';
 
@@ -28,6 +27,7 @@ char **get_inputs() {
       char **tmp = realloc(opts, cap * sizeof(char *));
       if (!tmp) {
         free(line);
+        free(opts);
         err(EXIT_FAILURE, "realloc failed");
       }
       opts = tmp;
@@ -39,27 +39,41 @@ char **get_inputs() {
   free(line); // cleanup getline's buffer
 
   opts[count] = NULL;
+  *out_count = count;
   return opts;
 }
 
+void free_inputs(char **inputs, size_t count) {
+  for (size_t i = 0; i < count; i++)
+    free(inputs[i]);
+  free(inputs);
+}
+
 int main() {
-  if (tb_init() != 0) return EXIT_FAILURE;
+  size_t input_count = 0;
+  char **inputs = get_inputs(&input_count);
+
+  if (input_count == 0) {
+    free_inputs(inputs, input_count);
+    return EXIT_FAILURE;
+  }
+
+  if (tb_init() != 0) {
+    free_inputs(inputs, input_count);
+    return EXIT_FAILURE;
+  }
 
   char buf[MAX_BUF + 1] = {0};
-  int len = 0;
-  int selected = 0;
-  char **inputs = get_inputs();
+  uint len = 0;
+  uint selected = 0;
 
   while (1) {
     tb_clear();
-    // NOTE: this loop set colors before user starts typing
-    // for (int i = 0; i < MAX_BUF; i++)
-    //   tb_set_cell(i, 0, ' ', TB_BLUE, TB_DEFAULT);
-    for (int i = 0; i < len; i++) // input box
+    for (int i = 0; i < len; i++)
       tb_set_cell(i, 0, buf[i], TB_BLUE | TB_BOLD, TB_DEFAULT);
 
     int x = MAX_BUF + 1;
-    for (int i = 0; inputs[i] != NULL; i++) { // prints std inputs
+    for (size_t i = 0; i < input_count; i++) {
       if (i > 0) {
         tb_printf(x, 0, TB_BLACK, TB_WHITE, "|");
         x += 1;
@@ -80,7 +94,7 @@ int main() {
       if (ev.key == TB_KEY_ESC || ev.key == TB_KEY_ENTER) break;
       if (ev.key == TB_KEY_ARROW_LEFT && selected > 0)
         selected--;
-      else if (ev.key == TB_KEY_ARROW_RIGHT && inputs[selected + 1] != NULL)
+      else if (ev.key == TB_KEY_ARROW_RIGHT && selected + 1 < input_count)
         selected++;
       if (ev.key == TB_KEY_BACKSPACE || ev.key == TB_KEY_BACKSPACE2 || ev.key == TB_KEY_CTRL_H) {
         if (len > 0) buf[--len] = '\0';
@@ -94,5 +108,6 @@ int main() {
   tb_shutdown();
   printf("input: %s\n", buf);
   printf("selected: %s\n", inputs[selected]);
+  free_inputs(inputs, input_count);
   return EXIT_SUCCESS;
 }
