@@ -1,6 +1,6 @@
 BasedOnStyle: LLVM
 IndentWidth: 2
-ColumnLimit: 80
+ColumnLimit: 100
 AlignAfterOpenBracket: DontAlign
 AllowAllArgumentsOnNextLine: false
 AlignConsecutiveMacros: AcrossEmptyLinesAndComments

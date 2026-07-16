@@ -1,15 +1,45 @@
 #define TB_IMPL
 #include "termbox2.h"
 
+#include <err.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-#define MAX_BUF 30
+#define MAX_BUF          30
+#define INITIAL_CAPACITY 16
 
 char **get_inputs() {
-  static char *dummy_data[] = {"ghostty", "kitty", "gimp", NULL};
-  return dummy_data;
+  char **opts = NULL;
+  size_t cap = INITIAL_CAPACITY;
+  size_t count = 0;
+  opts = malloc(cap * sizeof(char *));
+  if (!opts) err(EXIT_FAILURE, "malloc failed");
+
+  char *line = NULL;
+  size_t len = 0;
+  ssize_t read;
+  // read stdin until eof
+  while ((read = getline(&line, &len, stdin)) != -1) {
+    if (read > 0 && line[read - 1] == '\n') line[read - 1] = '\0';
+
+    if (count >= cap) {
+      cap *= 2;
+      char **tmp = realloc(opts, cap * sizeof(char *));
+      if (!tmp) {
+        free(line);
+        err(EXIT_FAILURE, "realloc failed");
+      }
+      opts = tmp;
+    }
+
+    opts[count] = strdup(line);
+    count++;
+  }
+  free(line); // cleanup getline's buffer
+
+  opts[count] = NULL;
+  return opts;
 }
 
 int main() {
@@ -52,9 +82,7 @@ int main() {
         selected--;
       else if (ev.key == TB_KEY_ARROW_RIGHT && inputs[selected + 1] != NULL)
         selected++;
-      if (ev.key == TB_KEY_BACKSPACE || ev.key == TB_KEY_BACKSPACE2 ||
-          ev.key == TB_KEY_CTRL_H)
-      {
+      if (ev.key == TB_KEY_BACKSPACE || ev.key == TB_KEY_BACKSPACE2 || ev.key == TB_KEY_CTRL_H) {
         if (len > 0) buf[--len] = '\0';
       } else if (ev.ch != 0 && len < MAX_BUF) {
         buf[len++] = (char)ev.ch;
