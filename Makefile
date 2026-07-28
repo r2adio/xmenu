@@ -1,17 +1,34 @@
-CFLAGS = -Wall -Wextra -std=c23
+include config.mk
 
-TARGET = xmenu
 SRC = xmenu.c
+OBJ = $(SRC:.c=.o)
 
-all: $(TARGET)
+all: xmenu
 
-$(TARGET): $(SRC)
-	$(CC) -o $(TARGET) $(SRC) $(CFLAGS)
+.c.o:
+	$(CC) -c $(CFLAGS) $<
 
-run: $(TARGET)
-	./$(TARGET)
+$(OBJ): config.mk
+
+xmenu: xmenu.o
+	$(CC) -o $@ xmenu.o $(LDFLAGS)
 
 clean:
-	rm -f $(TARGET)
+	rm -f xmenu $(OBJ) xmenu-$(VERSION).tar.gz
 
-.PHONY: all run clean
+dist: clean
+	mkdir -p xmenu-$(VERSION)
+	cp LICENSE Makefile config.mk $(SRC) termbox2.h xmenu-$(VERSION)
+	tar -cf xmenu-$(VERSION).tar xmenu-$(VERSION)
+	gzip xmenu-$(VERSION).tar
+	rm -rf xmenu-$(VERSION)
+
+install: all
+	mkdir -p $(DESTDIR)$(PREFIX)/bin
+	cp -f xmenu $(DESTDIR)$(PREFIX)/bin
+	chmod 755 $(DESTDIR)$(PREFIX)/bin/xmenu
+
+uninstall:
+	rm -f $(DESTDIR)$(PREFIX)/bin/xmenu
+
+.PHONY: all clean dist install uninstall
