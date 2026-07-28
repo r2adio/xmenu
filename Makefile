@@ -31,4 +31,21 @@ install: all
 uninstall:
 	rm -f $(DESTDIR)$(PREFIX)/bin/xmenu
 
-.PHONY: all clean dist install uninstall
+# temporary: libxmenu test target
+SRC_LIB = libxmenu.c
+SRC_CLI = xmenu_cli.c
+OBJ_LIB = $(SRC_LIB:.c=.o)
+OBJ_CLI = $(SRC_CLI:.c=.o)
+
+libxmenu: xmenu_cli
+
+xmenu_cli: $(OBJ_CLI) libxmenu.a
+	$(CC) -o $@ $(OBJ_CLI) -L. -lxmenu $(LDFLAGS)
+
+libxmenu.a: $(OBJ_LIB)
+	$(AR) rcs $@ $^
+
+$(OBJ_LIB): xmenu.h config.mk
+$(OBJ_CLI): xmenu.h config.mk
+
+.PHONY: all clean dist install uninstall libxmenu
