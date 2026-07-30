@@ -1,3 +1,4 @@
+#define TB_OPT_ATTR_W 32
 #define TB_IMPL
 #include "termbox2.h"
 #include "xmenu.h"
@@ -9,6 +10,11 @@
 
 #define MAX_BUF          30
 #define INITIAL_CAPACITY 16
+
+#define DMENU_NORM_FG    0xbbbbbb
+#define DMENU_NORM_BG    0x222222
+#define DMENU_SEL_FG     0xeeeeee
+#define DMENU_SEL_BG     0x005577
 
 static char **read_items(size_t *out_count) {
   char **opts = NULL;
@@ -60,26 +66,34 @@ int main() {
     return EXIT_FAILURE;
   }
 
+  tb_set_output_mode(TB_OUTPUT_TRUECOLOR);
+
   char buf[MAX_BUF + 1] = {0};
   uint len = 0;
 
   while (1) {
     tb_clear();
 
-    for (int i = 0; i < len; i++)
-      tb_set_cell(i, 0, buf[i], TB_BLUE | TB_BOLD, TB_DEFAULT);
+    int width = tb_width();
+    for (int x = 0; x < width; x++) tb_set_cell(x, 0, ' ', DMENU_NORM_FG, DMENU_NORM_BG);
 
-    int x = MAX_BUF + 1;
+    tb_print(0, 0, DMENU_NORM_FG, DMENU_NORM_BG, buf);
+
+    // int x = len > 0 ? len + 2 : 2;
+    int x = width / 4;
+
     for (size_t i = 0; i < m->count; i++) {
-      if (i > 0) {
-        tb_printf(x, 0, TB_BLACK, TB_WHITE, "|");
-        x += 1;
-      }
-      if (i == m->selected)
-        tb_printf(x, 0, TB_BLACK, TB_RED, " %s ", m->items[i]);
-      else
-        tb_printf(x, 0, TB_BLACK, TB_WHITE, " %s ", m->items[i]);
-      x += strlen(m->items[i]) + 2;
+      if (x >= width) break;
+
+      char item_buf[256];
+      snprintf(item_buf, sizeof(item_buf), " %s ", m->items[i]);
+
+      uintattr_t fg = (i == m->selected) ? DMENU_SEL_FG : DMENU_NORM_FG;
+      uintattr_t bg = (i == m->selected) ? DMENU_SEL_BG : DMENU_NORM_BG;
+
+      for (int j = 0; item_buf[j] != '\0' && x + j < width; j++)
+        tb_set_cell(x + j, 0, item_buf[j], fg, bg);
+      x += strlen(item_buf);
     }
 
     tb_set_cursor(len, 0);
@@ -91,13 +105,10 @@ int main() {
     if (ev.type == TB_EVENT_KEY) {
       if (ev.key == TB_KEY_ESC || ev.key == TB_KEY_ENTER) break;
 
-      if (ev.key == TB_KEY_ARROW_LEFT)
-        xmenu_select_prev(m);
-      else if (ev.key == TB_KEY_ARROW_RIGHT)
-        xmenu_select_next(m);
+      if (ev.key == TB_KEY_ARROW_LEFT) xmenu_select_prev(m);
+      else if (ev.key == TB_KEY_ARROW_RIGHT) xmenu_select_next(m);
 
-      if (ev.key == TB_KEY_BACKSPACE || ev.key == TB_KEY_BACKSPACE2 ||
-          ev.key == TB_KEY_CTRL_H) {
+      if (ev.key == TB_KEY_BACKSPACE || ev.key == TB_KEY_BACKSPACE2 || ev.key == TB_KEY_CTRL_H) {
         if (len > 0) buf[--len] = '\0';
       } else if (ev.ch != 0 && len < MAX_BUF) {
         buf[len++] = (char)ev.ch;
