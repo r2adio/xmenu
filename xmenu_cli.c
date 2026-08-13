@@ -118,8 +118,8 @@ int main() {
   }
 
   tb_shutdown();
-  printf("input: %s\n", buf);
-  printf("selected: %s\n", m->items[m->selected]);
+  fprintf(stderr, "input: %s\n", buf);
+  fprintf(stderr, "selected: %s\n", m->items[m->selected]);
   xmenu_free(m);
   return EXIT_SUCCESS;
 }

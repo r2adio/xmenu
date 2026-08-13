@@ -44,8 +44,7 @@ char **get_inputs(size_t *out_count) {
 }
 
 void free_inputs(char **inputs, size_t count) {
-  for (size_t i = 0; i < count; i++)
-    free(inputs[i]);
+  for (size_t i = 0; i < count; i++) free(inputs[i]);
   free(inputs);
 }
 
@@ -69,8 +68,7 @@ int main() {
 
   while (1) {
     tb_clear();
-    for (int i = 0; i < len; i++)
-      tb_set_cell(i, 0, buf[i], TB_BLUE | TB_BOLD, TB_DEFAULT);
+    for (int i = 0; i < len; i++) tb_set_cell(i, 0, buf[i], TB_BLUE | TB_BOLD, TB_DEFAULT);
 
     int x = MAX_BUF + 1;
     for (size_t i = 0; i < input_count; i++) {
@@ -78,10 +76,8 @@ int main() {
         tb_printf(x, 0, TB_BLACK, TB_WHITE, "|");
         x += 1;
       }
-      if (i == selected)
-        tb_printf(x, 0, TB_BLACK, TB_RED, " %s ", inputs[i]);
-      else
-        tb_printf(x, 0, TB_BLACK, TB_WHITE, " %s ", inputs[i]);
+      if (i == selected) tb_printf(x, 0, TB_BLACK, TB_RED, " %s ", inputs[i]);
+      else tb_printf(x, 0, TB_BLACK, TB_WHITE, " %s ", inputs[i]);
       x += strlen(inputs[i]) + 2;
     }
     tb_set_cursor(len, 0);
@@ -92,10 +88,8 @@ int main() {
 
     if (ev.type == TB_EVENT_KEY) {
       if (ev.key == TB_KEY_ESC || ev.key == TB_KEY_ENTER) break;
-      if (ev.key == TB_KEY_ARROW_LEFT && selected > 0)
-        selected--;
-      else if (ev.key == TB_KEY_ARROW_RIGHT && selected + 1 < input_count)
-        selected++;
+      if (ev.key == TB_KEY_ARROW_LEFT && selected > 0) selected--;
+      else if (ev.key == TB_KEY_ARROW_RIGHT && selected + 1 < input_count) selected++;
       if (ev.key == TB_KEY_BACKSPACE || ev.key == TB_KEY_BACKSPACE2 || ev.key == TB_KEY_CTRL_H) {
         if (len > 0) buf[--len] = '\0';
       } else if (ev.ch != 0 && len < MAX_BUF) {

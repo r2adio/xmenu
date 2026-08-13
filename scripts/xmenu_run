@@ -1,0 +1,12 @@
+#!/bin/sh
+
+app=$(
+    find /Applications \
+        -maxdepth 1 \
+        -name '*.app' \
+        -exec basename {} .app \; |
+    sort |
+    ./xmenu "$@"
+) || exit 1
+
+open -a "$app"

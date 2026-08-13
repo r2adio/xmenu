@@ -1,2 +1,3 @@
-bin/
+*.o
+xmenu
 xmenu-*.tar.gz
