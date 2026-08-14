@@ -71,6 +71,8 @@ int main() {
   char buf[MAX_BUF + 1] = {0};
   uint len = 0;
 
+  xmenu_filter(m, "");
+
   while (1) {
     tb_clear();
 
@@ -79,17 +81,17 @@ int main() {
 
     tb_print(0, 0, DMENU_NORM_FG, DMENU_NORM_BG, buf);
 
-    // int x = len > 0 ? len + 2 : 2;
     int x = width / 4;
-
-    for (size_t i = 0; i < m->count; i++) {
+    size_t nvis = xmenu_visible_count(m);
+    size_t sel = xmenu_visible_selected(m);
+    for (size_t i = 0; i < nvis; i++) {
       if (x >= width) break;
 
       char item_buf[256];
-      snprintf(item_buf, sizeof(item_buf), " %s ", m->items[i]);
+      snprintf(item_buf, sizeof(item_buf), " %s ", xmenu_visible_item(m, i));
 
-      uintattr_t fg = (i == m->selected) ? DMENU_SEL_FG : DMENU_NORM_FG;
-      uintattr_t bg = (i == m->selected) ? DMENU_SEL_BG : DMENU_NORM_BG;
+      uintattr_t fg = (i == sel) ? DMENU_SEL_FG : DMENU_NORM_FG;
+      uintattr_t bg = (i == sel) ? DMENU_SEL_BG : DMENU_NORM_BG;
 
       for (int j = 0; item_buf[j] != '\0' && x + j < width; j++)
         tb_set_cell(x + j, 0, item_buf[j], fg, bg);
@@ -109,17 +111,21 @@ int main() {
       else if (ev.key == TB_KEY_ARROW_RIGHT) xmenu_select_next(m);
 
       if (ev.key == TB_KEY_BACKSPACE || ev.key == TB_KEY_BACKSPACE2 || ev.key == TB_KEY_CTRL_H) {
-        if (len > 0) buf[--len] = '\0';
+        if (len > 0) {
+          buf[--len] = '\0';
+          xmenu_filter(m, buf);
+        }
       } else if (ev.ch != 0 && len < MAX_BUF) {
         buf[len++] = (char)ev.ch;
         buf[len] = '\0';
+        xmenu_filter(m, buf);
       }
     }
   }
 
   tb_shutdown();
   fprintf(stderr, "input: %s\n", buf);
-  fprintf(stderr, "selected: %s\n", m->items[m->selected]);
+  fprintf(stderr, "selected: %s\n", xmenu_visible_item(m, xmenu_visible_selected(m)));
   xmenu_free(m);
   return EXIT_SUCCESS;
 }
