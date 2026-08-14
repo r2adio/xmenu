@@ -11,6 +11,7 @@ all: xmenu
 	$(CC) -c $(CFLAGS) $<
 
 $(OBJ): xmenu.h config.mk
+xmenu_cli.o: termbox2.h
 
 xmenu: $(OBJ)
 	$(CC) -o $@ $(OBJ) $(LDFLAGS)
