@@ -17,19 +17,18 @@
 #define DMENU_SEL_BG     0x005577
 
 static char **read_items(size_t *out_count) {
-  char **opts = NULL;
   size_t cap = INITIAL_CAPACITY;
   size_t count = 0;
-  opts = malloc(cap * sizeof(char *));
+  char **opts = malloc(cap * sizeof(char *));
   if (!opts) err(EXIT_FAILURE, "malloc failed");
 
   char *line = NULL;
   size_t len = 0;
-  ssize_t read;
-  while ((read = getline(&line, &len, stdin)) != -1) {
-    if (read > 0 && line[read - 1] == '\n') line[read - 1] = '\0';
+  ssize_t nread;
+  while ((nread = getline(&line, &len, stdin)) != -1) {
+    if (nread > 0 && line[nread - 1] == '\n') line[nread - 1] = '\0';
 
-    if (count >= cap) {
+    if (count + 1 >= cap) {
       cap *= 2;
       char **tmp = realloc(opts, cap * sizeof(char *));
       if (!tmp) {
@@ -45,7 +44,6 @@ static char **read_items(size_t *out_count) {
   }
   free(line);
 
-  opts[count] = NULL;
   *out_count = count;
   return opts;
 }
@@ -70,6 +68,7 @@ int main() {
 
   char buf[MAX_BUF + 1] = {0};
   uint len = 0;
+  int status = EXIT_FAILURE;
 
   xmenu_filter(m, "");
 
@@ -105,7 +104,11 @@ int main() {
     tb_poll_event(&ev);
 
     if (ev.type == TB_EVENT_KEY) {
-      if (ev.key == TB_KEY_ESC || ev.key == TB_KEY_ENTER) break;
+      if (ev.key == TB_KEY_ESC) break;
+      if (ev.key == TB_KEY_ENTER) {
+        status = EXIT_SUCCESS;
+        break;
+      }
 
       if (ev.key == TB_KEY_ARROW_LEFT) xmenu_select_prev(m);
       else if (ev.key == TB_KEY_ARROW_RIGHT) xmenu_select_next(m);
@@ -124,8 +127,10 @@ int main() {
   }
 
   tb_shutdown();
-  fprintf(stderr, "input: %s\n", buf);
-  fprintf(stderr, "selected: %s\n", xmenu_visible_item(m, xmenu_visible_selected(m)));
+  if (status == EXIT_SUCCESS) {
+    const char *out = len > 0 ? buf : xmenu_visible_item(m, xmenu_visible_selected(m));
+    if (out) printf("%s\n", out);
+  }
   xmenu_free(m);
-  return EXIT_SUCCESS;
+  return status;
 }
