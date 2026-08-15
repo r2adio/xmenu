@@ -512,8 +512,7 @@ int tb_hide_cursor(void);
  * render time.
  */
 int tb_set_cell(int x, int y, uint32_t ch, uintattr_t fg, uintattr_t bg);
-int tb_set_cell_ex(int x, int y, uint32_t *ch, size_t nch, uintattr_t fg,
-    uintattr_t bg);
+int tb_set_cell_ex(int x, int y, uint32_t *ch, size_t nch, uintattr_t fg, uintattr_t bg);
 int tb_extend_cell(int x, int y, uint32_t ch);
 
 /* Return a pointer to the cell at the specified position.
@@ -673,6 +672,10 @@ int tb_get_fds(int *ttyfd, int *resizefd);
 /* Print and printf functions. Specify param `out_w` to determine width of
  * printed string. Strings are interpreted as UTF-8.
  *
+ * No attempt is made to do proper grapheme cluster parsing. With `TB_OPT_EGC`
+ * enabled, as a very coarse approximation, codepoints of `width==0` are tacked
+ * on to the previous codepoint via `tb_extend_cell`.
+ *
  * Non-printable characters (`iswprint(3)`) and truncated UTF-8 byte sequences
  * are replaced with U+FFFD.
  *
@@ -687,10 +690,8 @@ int tb_get_fds(int *ttyfd, int *resizefd);
  */
 int tb_print(int x, int y, uintattr_t fg, uintattr_t bg, const char *str);
 int tb_printf(int x, int y, uintattr_t fg, uintattr_t bg, const char *fmt, ...);
-int tb_print_ex(int x, int y, uintattr_t fg, uintattr_t bg, size_t *out_w,
-    const char *str);
-int tb_printf_ex(int x, int y, uintattr_t fg, uintattr_t bg, size_t *out_w,
-    const char *fmt, ...);
+int tb_print_ex(int x, int y, uintattr_t fg, uintattr_t bg, size_t *out_w, const char *str);
+int tb_printf_ex(int x, int y, uintattr_t fg, uintattr_t bg, size_t *out_w, const char *fmt, ...);
 
 /* Send raw bytes to terminal. */
 int tb_send(const char *buf, size_t nbuf);
@@ -767,29 +768,27 @@ int tb_wcwidth(uint32_t ch);
 
 #ifdef TB_IMPL
 
-#define if_err_return(rv, expr)                                                \
+#define if_err_return(rv, expr)                                                                    \
   if (((rv) = (expr)) != TB_OK) return (rv)
-#define if_err_break(rv, expr)                                                 \
+#define if_err_break(rv, expr)                                                                     \
   if (((rv) = (expr)) != TB_OK) break
-#define if_ok_return(rv, expr)                                                 \
+#define if_ok_return(rv, expr)                                                                     \
   if (((rv) = (expr)) == TB_OK) return (rv)
-#define if_ok_or_need_more_return(rv, expr)                                    \
+#define if_ok_or_need_more_return(rv, expr)                                                        \
   if (((rv) = (expr)) == TB_OK || (rv) == TB_ERR_NEED_MORE) return (rv)
 
-#define send_literal(rv, a)                                                    \
-  if_err_return((rv), bytebuf_nputs(&global.out, (a), sizeof(a) - 1))
+#define send_literal(rv, a) if_err_return((rv), bytebuf_nputs(&global.out, (a), sizeof(a) - 1))
 
-#define send_num(rv, nbuf, n)                                                  \
-  if_err_return((rv),                                                          \
-      bytebuf_nputs(&global.out, (nbuf), convert_num((n), (nbuf))))
+#define send_num(rv, nbuf, n)                                                                      \
+  if_err_return((rv), bytebuf_nputs(&global.out, (nbuf), convert_num((n), (nbuf))))
 
-#define snprintf_or_return(rv, str, sz, fmt, ...)                              \
-  do {                                                                         \
-    (rv) = snprintf((str), (sz), (fmt), __VA_ARGS__);                          \
-    if ((rv) < 0 || (rv) >= (int)(sz)) return TB_ERR;                          \
+#define snprintf_or_return(rv, str, sz, fmt, ...)                                                  \
+  do {                                                                                             \
+    (rv) = snprintf((str), (sz), (fmt), __VA_ARGS__);                                              \
+    if ((rv) < 0 || (rv) >= (int)(sz)) return TB_ERR;                                              \
   } while (0)
 
-#define if_not_init_return()                                                   \
+#define if_not_init_return()                                                                       \
   if (!global.initialized) return TB_ERR_NOT_INIT
 
 struct bytebuf {
@@ -1534,17 +1533,15 @@ static struct {
     {NULL,           0,                  0                                      },
 };
 
-static const unsigned char utf8_length[256] = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-    1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
-    2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
-    3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 4, 4, 5, 5, 5, 5, 6, 6, 1, 1};
+static const unsigned char utf8_length[256] = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
+    2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 4, 4,
+    4, 4, 4, 4, 4, 4, 5, 5, 5, 5, 6, 6, 1, 1};
 
 static const unsigned char utf8_mask[6] = {0x7f, 0x1f, 0x0f, 0x07, 0x03, 0x01};
 
@@ -2276,14 +2273,13 @@ static struct {
 #endif // ifndef TB_OPT_LIBC_WCHAR
 
 static int tb_reset(void);
-static int tb_printf_inner(int x, int y, uintattr_t fg, uintattr_t bg,
-    size_t *out_w, const char *fmt, va_list vl);
+static int tb_printf_inner(int x, int y, uintattr_t fg, uintattr_t bg, size_t *out_w,
+    const char *fmt, va_list vl);
 static int init_term_attrs(void);
 static int init_term_caps(void);
 static int init_cap_trie(void);
 static int cap_trie_add(const char *cap, uint16_t key, uint8_t mod);
-static int cap_trie_find(const char *buf, size_t nbuf, struct cap_trie **last,
-    size_t *depth);
+static int cap_trie_find(const char *buf, size_t nbuf, struct cap_trie **last, size_t *depth);
 static int cap_trie_deinit(struct cap_trie *node);
 static int init_resize_handler(void);
 static int send_init_escape_codes(void);
@@ -2297,8 +2293,8 @@ static int load_terminfo_from_path(const char *path, const char *term);
 static int read_terminfo_path(const char *path);
 static int parse_terminfo_caps(void);
 static int load_builtin_caps(void);
-static const char *get_terminfo_string(int16_t offsets_pos, int16_t offsets_len,
-    int16_t table_pos, int16_t table_size, int16_t index);
+static const char *get_terminfo_string(int16_t offsets_pos, int16_t offsets_len, int16_t table_pos,
+    int16_t table_size, int16_t index);
 static int get_terminfo_int16(int offset, int16_t *val);
 static int wait_event(struct tb_event *event, int timeout);
 static int extract_event(struct tb_event *event);
@@ -2309,16 +2305,14 @@ static int extract_esc_mouse(struct tb_event *event);
 static int resize_cellbufs(void);
 static void handle_resize(int sig);
 static int send_attr(uintattr_t fg, uintattr_t bg);
-static int send_sgr(uint32_t fg, uint32_t bg, int fg_is_default,
-    int bg_is_default);
+static int send_sgr(uint32_t fg, uint32_t bg, int fg_is_default, int bg_is_default);
 static int send_cursor_if(int x, int y);
 static int send_char(int x, int y, uint32_t ch);
 static int send_cluster(int x, int y, uint32_t *ch, size_t nch);
 static int convert_num(uint32_t num, char *buf);
 static int cell_cmp(struct tb_cell *a, struct tb_cell *b);
 static int cell_copy(struct tb_cell *dst, struct tb_cell *src);
-static int cell_set(struct tb_cell *cell, uint32_t *ch, size_t nch,
-    uintattr_t fg, uintattr_t bg);
+static int cell_set(struct tb_cell *cell, uint32_t *ch, size_t nch, uintattr_t fg, uintattr_t bg);
 static int cell_reserve_ech(struct tb_cell *cell, size_t n);
 static int cell_free(struct tb_cell *cell);
 static int cellbuf_init(struct cellbuf *c, int w, int h);
@@ -2359,7 +2353,7 @@ int tb_init_rwfd(int rfd, int wfd) {
   int rv;
 
   tb_reset();
-  global.ttyfd = isatty(rfd) ? rfd : (isatty(wfd) ? wfd : -1);
+  global.ttyfd = isatty(rfd) ? rfd : (wfd != rfd && isatty(wfd) ? wfd : -1);
   global.rfd = rfd;
   global.wfd = wfd;
 
@@ -2428,9 +2422,10 @@ int tb_present(void) {
       int w;
       {
 #ifdef TB_OPT_EGC
-        if (back->nech > 0)
-          w = tb_cluster_width(back->ech, back->nech);
+        if (back->nech > 0) w = tb_cluster_width(back->ech, back->nech);
         else
+#else
+        (void)tb_cluster_width;
 #endif
           w = tb_wcwidth((wchar_t)back->ch);
       }
@@ -2446,8 +2441,7 @@ int tb_present(void) {
         } else {
           {
 #ifdef TB_OPT_EGC
-            if (back->nech > 0)
-              send_cluster(x, y, back->ech, back->nech);
+            if (back->nech > 0) send_cluster(x, y, back->ech, back->nech);
             else
 #endif
               send_char(x, y, back->ch);
@@ -2462,8 +2456,7 @@ int tb_present(void) {
           for (i = 1; i < w; i++) {
             struct tb_cell *front_wide;
             uint32_t invalid = -1;
-            if_err_return(rv,
-                cellbuf_get(&global.front, x + i, y, &front_wide));
+            if_err_return(rv, cellbuf_get(&global.front, x + i, y, &front_wide));
             if_err_return(rv, cell_set(front_wide, &invalid, 1, -1, -1));
           }
         }
@@ -2491,8 +2484,7 @@ int tb_set_cursor(int cx, int cy) {
   if (cx < 0) cx = 0;
   if (cy < 0) cy = 0;
   if (global.cursor_x == -1) {
-    if_err_return(rv,
-        bytebuf_puts(&global.out, global.caps[TB_CAP_SHOW_CURSOR]));
+    if_err_return(rv, bytebuf_puts(&global.out, global.caps[TB_CAP_SHOW_CURSOR]));
   }
   if_err_return(rv, send_cursor_if(cx, cy));
   global.cursor_x = cx;
@@ -2504,8 +2496,7 @@ int tb_hide_cursor(void) {
   if_not_init_return();
   int rv;
   if (global.cursor_x >= 0) {
-    if_err_return(rv,
-        bytebuf_puts(&global.out, global.caps[TB_CAP_HIDE_CURSOR]));
+    if_err_return(rv, bytebuf_puts(&global.out, global.caps[TB_CAP_HIDE_CURSOR]));
   }
   global.cursor_x = -1;
   global.cursor_y = -1;
@@ -2516,8 +2507,7 @@ int tb_set_cell(int x, int y, uint32_t ch, uintattr_t fg, uintattr_t bg) {
   return tb_set_cell_ex(x, y, &ch, 1, fg, bg);
 }
 
-int tb_set_cell_ex(int x, int y, uint32_t *ch, size_t nch, uintattr_t fg,
-    uintattr_t bg) {
+int tb_set_cell_ex(int x, int y, uint32_t *ch, size_t nch, uintattr_t fg, uintattr_t bg) {
   if_not_init_return();
   int rv;
   struct tb_cell *cell;
@@ -2629,8 +2619,7 @@ int tb_print(int x, int y, uintattr_t fg, uintattr_t bg, const char *str) {
   return tb_print_ex(x, y, fg, bg, NULL, str);
 }
 
-int tb_print_ex(int x, int y, uintattr_t fg, uintattr_t bg, size_t *out_w,
-    const char *str) {
+int tb_print_ex(int x, int y, uintattr_t fg, uintattr_t bg, size_t *out_w, const char *str) {
   int rv, w, ix, x_prev;
   uint32_t uni;
 
@@ -2666,10 +2655,14 @@ int tb_print_ex(int x, int y, uintattr_t fg, uintattr_t bg, size_t *out_w,
 
     if (w < 0) {
       return TB_ERR;     // shouldn't happen if iswprint
-    } else if (w == 0) { // combining character
+    } else if (w == 0) { // combining character? TODO: UAX-29
+#ifdef TB_OPT_EGC
       if (cellbuf_in_bounds(&global.back, x_prev, y)) {
         if_err_return(rv, tb_extend_cell(x_prev, y, uni));
       }
+#else
+      (void)x_prev;
+#endif
     } else {
       if (cellbuf_in_bounds(&global.back, x, y)) {
         if_err_return(rv, tb_set_cell(x, y, uni, fg, bg));
@@ -2683,8 +2676,7 @@ int tb_print_ex(int x, int y, uintattr_t fg, uintattr_t bg, size_t *out_w,
   return TB_OK;
 }
 
-int tb_printf(int x, int y, uintattr_t fg, uintattr_t bg, const char *fmt,
-    ...) {
+int tb_printf(int x, int y, uintattr_t fg, uintattr_t bg, const char *fmt, ...) {
   int rv;
   va_list vl;
   va_start(vl, fmt);
@@ -2693,8 +2685,7 @@ int tb_printf(int x, int y, uintattr_t fg, uintattr_t bg, const char *fmt,
   return rv;
 }
 
-int tb_printf_ex(int x, int y, uintattr_t fg, uintattr_t bg, size_t *out_w,
-    const char *fmt, ...) {
+int tb_printf_ex(int x, int y, uintattr_t fg, uintattr_t bg, size_t *out_w, const char *fmt, ...) {
   int rv;
   va_list vl;
   va_start(vl, fmt);
@@ -2704,6 +2695,7 @@ int tb_printf_ex(int x, int y, uintattr_t fg, uintattr_t bg, size_t *out_w,
 }
 
 int tb_send(const char *buf, size_t nbuf) {
+  if_not_init_return();
   return bytebuf_nputs(&global.out, buf, nbuf);
 }
 
@@ -2911,8 +2903,8 @@ static int init_term_attrs(void) {
   return TB_OK;
 }
 
-int tb_printf_inner(int x, int y, uintattr_t fg, uintattr_t bg, size_t *out_w,
-    const char *fmt, va_list vl) {
+int tb_printf_inner(int x, int y, uintattr_t fg, uintattr_t bg, size_t *out_w, const char *fmt,
+    va_list vl) {
   int rv;
   char buf[TB_OPT_PRINTF_BUF];
   rv = vsnprintf(buf, sizeof(buf), fmt, vl);
@@ -2946,8 +2938,7 @@ static int init_cap_trie(void) {
   // with builtin_mod_caps. It is desirable to give precedence to global.caps
   // here.
   for (i = 0; builtin_mod_caps[i].cap != NULL; i++) {
-    rv = cap_trie_add(builtin_mod_caps[i].cap, builtin_mod_caps[i].key,
-        builtin_mod_caps[i].mod);
+    rv = cap_trie_add(builtin_mod_caps[i].cap, builtin_mod_caps[i].key, builtin_mod_caps[i].mod);
     if (rv != TB_OK && rv != TB_ERR_CAP_COLLISION) return rv;
   }
 
@@ -2974,8 +2965,8 @@ static int cap_trie_add(const char *cap, uint16_t key, uint8_t mod) {
     if (!next) {
       // We need to add a new child to node
       node->nchildren += 1;
-      node->children = (struct cap_trie *)tb_realloc(node->children,
-          sizeof(*node) * node->nchildren);
+      node->children =
+          (struct cap_trie *)tb_realloc(node->children, sizeof(*node) * node->nchildren);
       if (!node->children) { return TB_ERR_MEM; }
       next = &node->children[node->nchildren - 1];
       memset(next, 0, sizeof(*next));
@@ -2997,8 +2988,7 @@ static int cap_trie_add(const char *cap, uint16_t key, uint8_t mod) {
   return TB_OK;
 }
 
-static int cap_trie_find(const char *buf, size_t nbuf, struct cap_trie **last,
-    size_t *depth) {
+static int cap_trie_find(const char *buf, size_t nbuf, struct cap_trie **last, size_t *depth) {
   struct cap_trie *next, *node = &global.cap_trie;
   size_t i, j;
   *last = node;
@@ -3054,8 +3044,7 @@ static int init_resize_handler(void) {
 static int send_init_escape_codes(void) {
   int rv;
   if_err_return(rv, bytebuf_puts(&global.out, global.caps[TB_CAP_ENTER_CA]));
-  if_err_return(rv,
-      bytebuf_puts(&global.out, global.caps[TB_CAP_ENTER_KEYPAD]));
+  if_err_return(rv, bytebuf_puts(&global.out, global.caps[TB_CAP_ENTER_KEYPAD]));
   if_err_return(rv, bytebuf_puts(&global.out, global.caps[TB_CAP_HIDE_CURSOR]));
   return TB_OK;
 }
@@ -3064,8 +3053,7 @@ static int send_clear(void) {
   int rv;
 
   if_err_return(rv, send_attr(global.fg, global.bg));
-  if_err_return(rv,
-      bytebuf_puts(&global.out, global.caps[TB_CAP_CLEAR_SCREEN]));
+  if_err_return(rv, bytebuf_puts(&global.out, global.caps[TB_CAP_CLEAR_SCREEN]));
 
   if_err_return(rv, send_cursor_if(global.cursor_x, global.cursor_y));
   if_err_return(rv, bytebuf_flush(&global.out, global.wfd));
@@ -3105,11 +3093,8 @@ static int update_term_size_via_esc(void) {
 #endif
 
   char move_and_report[] = "\x1b[9999;9999H\x1b[6n";
-  ssize_t write_rv =
-      write(global.wfd, move_and_report, strlen(move_and_report));
-  if (write_rv != (ssize_t)strlen(move_and_report)) {
-    return TB_ERR_RESIZE_WRITE;
-  }
+  ssize_t write_rv = write(global.wfd, move_and_report, strlen(move_and_report));
+  if (write_rv != (ssize_t)strlen(move_and_report)) { return TB_ERR_RESIZE_WRITE; }
 
   fd_set fds;
   FD_ZERO(&fds);
@@ -3135,9 +3120,7 @@ static int update_term_size_via_esc(void) {
   buf[read_rv] = '\0';
 
   int rw, rh;
-  if (sscanf(buf, "\x1b[%d;%dR", &rh, &rw) != 2) {
-    return TB_ERR_RESIZE_SSCANF;
-  }
+  if (sscanf(buf, "\x1b[%d;%dR", &rh, &rw) != 2) { return TB_ERR_RESIZE_SSCANF; }
 
   global.width = rw;
   global.height = rh;
@@ -3163,14 +3146,12 @@ static int tb_deinit(void) {
     bytebuf_puts(&global.out, TB_HARDCAP_EXIT_MOUSE);
     bytebuf_flush(&global.out, global.wfd);
   }
-  if (global.ttyfd >= 0) {
-    if (global.has_orig_tios) {
-      tcsetattr(global.ttyfd, TCSAFLUSH, &global.orig_tios);
-    }
-    if (global.ttyfd_open) {
-      close(global.ttyfd);
-      global.ttyfd_open = 0;
-    }
+  if (global.has_orig_tios && global.ttyfd >= 0) {
+    tcsetattr(global.ttyfd, TCSAFLUSH, &global.orig_tios);
+  }
+  if (global.ttyfd_open) {
+    close(global.ttyfd >= 0 ? global.ttyfd : global.rfd);
+    global.ttyfd_open = 0;
   }
 
   struct sigaction sa;
@@ -3226,9 +3207,7 @@ static int load_terminfo(void) {
     char *dir = strtok(tmp, ":");
     while (dir) {
       const char *cdir = dir;
-      if (*cdir != '\0') {
-        if_ok_return(rv, load_terminfo_from_path(cdir, term));
-      }
+      if (*cdir != '\0') { if_ok_return(rv, load_terminfo_from_path(cdir, term)); }
       dir = strtok(NULL, ":");
     }
   }
@@ -3276,7 +3255,7 @@ static int read_terminfo_path(const char *path) {
   }
 
   size_t fsize = st.st_size;
-  char *data = (char *)tb_malloc(fsize);
+  char *data = (char *)tb_malloc(fsize + 1);
   if (!data) {
     fclose(fp);
     return TB_ERR;
@@ -3287,6 +3266,7 @@ static int read_terminfo_path(const char *path) {
     tb_free(data);
     return TB_ERR;
   }
+  data[fsize] = '\0';
 
   global.terminfo = data;
   global.nterminfo = fsize;
@@ -3302,8 +3282,7 @@ static int parse_terminfo_caps(void) {
   // Ensure there's at least a header's worth of data
   if (global.nterminfo < 6 * (int)sizeof(int16_t)) return TB_ERR;
 
-  int16_t magic_number, nbytes_names, nbytes_bools, num_ints, num_offsets,
-      nbytes_strings;
+  int16_t magic_number, nbytes_names, nbytes_bools, num_ints, num_offsets, nbytes_strings;
   size_t nbytes_header = 6 * sizeof(int16_t);
   // header[0] the magic number (octal 0432 or 01036)
   // header[1] the size, in bytes, of the names section
@@ -3327,21 +3306,20 @@ static int parse_terminfo_caps(void) {
   // > an even byte
   const int align_offset = (nbytes_names + nbytes_bools) % 2 != 0 ? 1 : 0;
 
-  const int pos_str_offsets =
-      nbytes_header                                // header (12 bytes)
-      + nbytes_names                               // length of names section
-      + nbytes_bools                               // length of boolean section
-      + align_offset + (num_ints * bytes_per_int); // length of numbers section
+  const int pos_str_offsets = nbytes_header  // header (12 bytes)
+                              + nbytes_names // length of names section
+                              + nbytes_bools // length of boolean section
+                              + align_offset +
+                              (num_ints * bytes_per_int); // length of numbers section
 
   const int pos_str_table =
-      pos_str_offsets +
-      (num_offsets * sizeof(int16_t)); // length of string offsets table
+      pos_str_offsets + (num_offsets * sizeof(int16_t)); // length of string offsets table
 
   // Load caps
   int i;
   for (i = 0; i < TB_CAP__COUNT; i++) {
-    const char *cap = get_terminfo_string(pos_str_offsets, num_offsets,
-        pos_str_table, nbytes_strings, terminfo_cap_indexes[i]);
+    const char *cap = get_terminfo_string(pos_str_offsets, num_offsets, pos_str_table,
+        nbytes_strings, terminfo_cap_indexes[i]);
     if (!cap) {
       // Something is not right
       return TB_ERR;
@@ -3361,9 +3339,7 @@ static int load_builtin_caps(void) {
   // Check for exact TERM match
   for (i = 0; builtin_terms[i].name != NULL; i++) {
     if (strcmp(term, builtin_terms[i].name) == 0) {
-      for (j = 0; j < TB_CAP__COUNT; j++) {
-        global.caps[j] = builtin_terms[i].caps[j];
-      }
+      for (j = 0; j < TB_CAP__COUNT; j++) { global.caps[j] = builtin_terms[i].caps[j]; }
       return TB_OK;
     }
   }
@@ -3371,12 +3347,9 @@ static int load_builtin_caps(void) {
   // Check for partial TERM or alias match
   for (i = 0; builtin_terms[i].name != NULL; i++) {
     if (strstr(term, builtin_terms[i].name) != NULL ||
-        (*(builtin_terms[i].alias) != '\0' &&
-            strstr(term, builtin_terms[i].alias) != NULL))
+        (*(builtin_terms[i].alias) != '\0' && strstr(term, builtin_terms[i].alias) != NULL))
     {
-      for (j = 0; j < TB_CAP__COUNT; j++) {
-        global.caps[j] = builtin_terms[i].caps[j];
-      }
+      for (j = 0; j < TB_CAP__COUNT; j++) { global.caps[j] = builtin_terms[i].caps[j]; }
       return TB_OK;
     }
   }
@@ -3384,8 +3357,8 @@ static int load_builtin_caps(void) {
   return TB_ERR_UNSUPPORTED_TERM;
 }
 
-static const char *get_terminfo_string(int16_t offsets_pos, int16_t offsets_len,
-    int16_t table_pos, int16_t table_size, int16_t index) {
+static const char *get_terminfo_string(int16_t offsets_pos, int16_t offsets_len, int16_t table_pos,
+    int16_t table_size, int16_t index) {
   if (index >= offsets_len) {
     // An index beyond the offset table indicates absent
     // See `convert_strings` in tinfo `read_entry.c`
@@ -3443,11 +3416,9 @@ static int wait_event(struct tb_event *event, int timeout) {
     FD_SET(global.rfd, &fds);
     FD_SET(global.resize_pipefd[0], &fds);
 
-    int maxfd = global.resize_pipefd[0] > global.rfd ? global.resize_pipefd[0]
-                                                     : global.rfd;
+    int maxfd = global.resize_pipefd[0] > global.rfd ? global.resize_pipefd[0] : global.rfd;
 
-    int select_rv =
-        select(maxfd + 1, &fds, NULL, NULL, (timeout < 0) ? NULL : &tv);
+    int select_rv = select(maxfd + 1, &fds, NULL, NULL, (timeout < 0) ? NULL : &tv);
 
     if (select_rv < 0) {
       // Let EINTR/EAGAIN bubble up
@@ -3519,8 +3490,7 @@ static int extract_event(struct tb_event *event) {
   }
 
   // ASCII control key?
-  int is_ctrl =
-      (uint16_t)in->buf[0] < TB_KEY_SPACE || in->buf[0] == TB_KEY_BACKSPACE2;
+  int is_ctrl = (uint16_t)in->buf[0] < TB_KEY_SPACE || in->buf[0] == TB_KEY_BACKSPACE2;
   if (is_ctrl) {
     event->type = TB_EVENT_KEY;
     event->ch = 0;
@@ -3630,12 +3600,10 @@ static int extract_esc_mouse(struct tb_event *event) {
 
       switch (b & 3) {
         case 0:
-          event->key =
-              ((b & 64) != 0) ? TB_KEY_MOUSE_WHEEL_UP : TB_KEY_MOUSE_LEFT;
+          event->key = ((b & 64) != 0) ? TB_KEY_MOUSE_WHEEL_UP : TB_KEY_MOUSE_LEFT;
           break;
         case 1:
-          event->key =
-              ((b & 64) != 0) ? TB_KEY_MOUSE_WHEEL_DOWN : TB_KEY_MOUSE_MIDDLE;
+          event->key = ((b & 64) != 0) ? TB_KEY_MOUSE_WHEEL_DOWN : TB_KEY_MOUSE_MIDDLE;
           break;
         case 2:
           event->key = TB_KEY_MOUSE_RIGHT;
@@ -3678,8 +3646,8 @@ static int extract_esc_mouse(struct tb_event *event) {
           if (cur_num == -1) cur_num = 0;
           cur_num *= 10;
           cur_num += (int)(c - '0');
-        } else if (cur_num != -1 && ((num_i < 2 && c == ';') ||
-                                        (num_i == 2 && (c == 'm' || c == 'M'))))
+        } else if (cur_num != -1 &&
+                   ((num_i < 2 && c == ';') || (num_i == 2 && (c == 'm' || c == 'M'))))
         {
           // We're at a semi-colon, 'm', or 'M'
           // and we have a number
@@ -3704,12 +3672,10 @@ static int extract_esc_mouse(struct tb_event *event) {
 
       switch (num[0] & 3) {
         case 0:
-          event->key =
-              ((num[0] & 64) != 0) ? TB_KEY_MOUSE_WHEEL_UP : TB_KEY_MOUSE_LEFT;
+          event->key = ((num[0] & 64) != 0) ? TB_KEY_MOUSE_WHEEL_UP : TB_KEY_MOUSE_LEFT;
           break;
         case 1:
-          event->key = ((num[0] & 64) != 0) ? TB_KEY_MOUSE_WHEEL_DOWN
-                                            : TB_KEY_MOUSE_MIDDLE;
+          event->key = ((num[0] & 64) != 0) ? TB_KEY_MOUSE_WHEEL_DOWN : TB_KEY_MOUSE_MIDDLE;
           break;
         case 2:
           event->key = TB_KEY_MOUSE_RIGHT;
@@ -3809,30 +3775,23 @@ static int send_attr(uintattr_t fg, uintattr_t bg) {
 #endif
   }
 
-  if (fg & TB_BOLD)
-    if_err_return(rv, bytebuf_puts(&global.out, global.caps[TB_CAP_BOLD]));
+  if (fg & TB_BOLD) if_err_return(rv, bytebuf_puts(&global.out, global.caps[TB_CAP_BOLD]));
 
-  if (fg & TB_BLINK)
-    if_err_return(rv, bytebuf_puts(&global.out, global.caps[TB_CAP_BLINK]));
+  if (fg & TB_BLINK) if_err_return(rv, bytebuf_puts(&global.out, global.caps[TB_CAP_BLINK]));
 
   if (fg & TB_UNDERLINE)
     if_err_return(rv, bytebuf_puts(&global.out, global.caps[TB_CAP_UNDERLINE]));
 
-  if (fg & TB_ITALIC)
-    if_err_return(rv, bytebuf_puts(&global.out, global.caps[TB_CAP_ITALIC]));
+  if (fg & TB_ITALIC) if_err_return(rv, bytebuf_puts(&global.out, global.caps[TB_CAP_ITALIC]));
 
-  if (fg & TB_DIM)
-    if_err_return(rv, bytebuf_puts(&global.out, global.caps[TB_CAP_DIM]));
+  if (fg & TB_DIM) if_err_return(rv, bytebuf_puts(&global.out, global.caps[TB_CAP_DIM]));
 
 #if TB_OPT_ATTR_W == 64
-  if (fg & TB_STRIKEOUT)
-    if_err_return(rv, bytebuf_puts(&global.out, TB_HARDCAP_STRIKEOUT));
+  if (fg & TB_STRIKEOUT) if_err_return(rv, bytebuf_puts(&global.out, TB_HARDCAP_STRIKEOUT));
 
-  if (fg & TB_UNDERLINE_2)
-    if_err_return(rv, bytebuf_puts(&global.out, TB_HARDCAP_UNDERLINE_2));
+  if (fg & TB_UNDERLINE_2) if_err_return(rv, bytebuf_puts(&global.out, TB_HARDCAP_UNDERLINE_2));
 
-  if (fg & TB_OVERLINE)
-    if_err_return(rv, bytebuf_puts(&global.out, TB_HARDCAP_OVERLINE));
+  if (fg & TB_OVERLINE) if_err_return(rv, bytebuf_puts(&global.out, TB_HARDCAP_OVERLINE));
 
   if (fg & TB_INVISIBLE)
     if_err_return(rv, bytebuf_puts(&global.out, global.caps[TB_CAP_INVISIBLE]));
@@ -3862,8 +3821,7 @@ static int send_attr(uintattr_t fg, uintattr_t bg) {
   return TB_OK;
 }
 
-static int send_sgr(uint32_t cfg, uint32_t cbg, int fg_is_default,
-    int bg_is_default) {
+static int send_sgr(uint32_t cfg, uint32_t cbg, int fg_is_default, int bg_is_default) {
   int rv;
   char nbuf[32];
 
@@ -3944,9 +3902,7 @@ static int send_cluster(int x, int y, uint32_t *ch, size_t nch) {
   int rv;
   char chu8[8];
 
-  if (global.last_x != x - 1 || global.last_y != y) {
-    if_err_return(rv, send_cursor_if(x, y));
-  }
+  if (global.last_x != x - 1 || global.last_y != y) { if_err_return(rv, send_cursor_if(x, y)); }
   global.last_x = x;
   global.last_y = y;
 
@@ -3984,7 +3940,7 @@ static int cell_cmp(struct tb_cell *a, struct tb_cell *b) {
   if (a->nech != b->nech) {
     return 1;
   } else if (a->nech > 0) { // a->nech == b->nech
-    return memcmp(a->ech, b->ech, a->nech);
+    return memcmp(a->ech, b->ech, a->nech * sizeof(*a->ech));
   }
 #endif
   return 0;
@@ -3992,15 +3948,12 @@ static int cell_cmp(struct tb_cell *a, struct tb_cell *b) {
 
 static int cell_copy(struct tb_cell *dst, struct tb_cell *src) {
 #ifdef TB_OPT_EGC
-  if (src->nech > 0) {
-    return cell_set(dst, src->ech, src->nech, src->fg, src->bg);
-  }
+  if (src->nech > 0) { return cell_set(dst, src->ech, src->nech, src->fg, src->bg); }
 #endif
   return cell_set(dst, &src->ch, 1, src->fg, src->bg);
 }
 
-static int cell_set(struct tb_cell *cell, uint32_t *ch, size_t nch,
-    uintattr_t fg, uintattr_t bg) {
+static int cell_set(struct tb_cell *cell, uint32_t *ch, size_t nch, uintattr_t fg, uintattr_t bg) {
   // TODO: iswprint ch?
   cell->ch = ch ? *ch : 0;
   cell->fg = fg;
@@ -4115,7 +4068,11 @@ static int cellbuf_resize(struct cellbuf *c, int w, int h) {
     }
   }
 
-  tb_free(prev);
+  struct cellbuf prevbuf = {0};
+  prevbuf.width = ow;
+  prevbuf.height = oh;
+  prevbuf.cells = prev;
+  cellbuf_free(&prevbuf);
 
   return TB_OK;
 }
@@ -4220,10 +4177,8 @@ static int tb_cluster_width(uint32_t *ch, size_t nch) {
     if (w > wmax) wmax = w;
   }
   if (wmax >= 1) {
-    if (vs15)
-      return 1;
-    else if (vs16 || zwj || ri >= 2)
-      return 2;
+    if (vs15) return 1;
+    else if (vs16 || zwj || ri >= 2) return 2;
   }
   return wmax;
 }

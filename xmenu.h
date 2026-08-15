@@ -10,7 +10,7 @@ void xmenu_free(xmenu_Model *m);                    // free the model and its re
 void xmenu_select_next(xmenu_Model *m); // move selection down within the visible items
 void xmenu_select_prev(xmenu_Model *m); // move selection up within the visible items
 
-void xmenu_filter(xmenu_Model *m, const char *query); // keep items that match query (substring)
+void xmenu_filter(xmenu_Model *m, const char *query); // keep items that match query (case-insensitive substring)
 
 size_t xmenu_visible_count(const xmenu_Model *m); // number of items visible after filtering
 const char *xmenu_visible_item(const xmenu_Model *m,

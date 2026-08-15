@@ -82,7 +82,7 @@ void xmenu_filter(xmenu_Model *m, const char *query) {
 
   m->visible_count = 0;
   for (size_t i = 0; i < m->count; i++) {
-    if (m->filter[0] == '\0' || strstr(m->items[i], m->filter))
+    if (m->filter[0] == '\0' || strcasestr(m->items[i], m->filter))
       m->visible[m->visible_count++] = i;
   }
 

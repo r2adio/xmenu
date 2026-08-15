@@ -113,7 +113,15 @@ int main() {
       if (ev.key == TB_KEY_ARROW_LEFT) xmenu_select_prev(m);
       else if (ev.key == TB_KEY_ARROW_RIGHT) xmenu_select_next(m);
 
-      if (ev.key == TB_KEY_BACKSPACE || ev.key == TB_KEY_BACKSPACE2 || ev.key == TB_KEY_CTRL_H) {
+      if (ev.key == TB_KEY_CTRL_W) {
+        while (len > 0 && buf[len - 1] == ' ') buf[--len] = '\0';
+        while (len > 0 && buf[len - 1] != ' ') buf[--len] = '\0';
+        xmenu_filter(m, buf);
+      } else if (ev.key == TB_KEY_CTRL_U) {
+        len = 0;
+        buf[0] = '\0';
+        xmenu_filter(m, buf);
+      } else if (ev.key == TB_KEY_BACKSPACE || ev.key == TB_KEY_BACKSPACE2 || ev.key == TB_KEY_CTRL_H) {
         if (len > 0) {
           buf[--len] = '\0';
           xmenu_filter(m, buf);
