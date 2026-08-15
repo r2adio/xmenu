@@ -128,7 +128,11 @@ int main() {
 
   tb_shutdown();
   if (status == EXIT_SUCCESS) {
-    const char *out = len > 0 ? buf : xmenu_visible_item(m, xmenu_visible_selected(m));
+    const char *out = NULL;
+    if (xmenu_visible_count(m) > 0)
+      out = xmenu_visible_item(m, xmenu_visible_selected(m));
+    else if (len > 0)
+      out = buf;
     if (out) printf("%s\n", out);
   }
   xmenu_free(m);
